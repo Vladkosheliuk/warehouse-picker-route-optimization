@@ -560,11 +560,84 @@ http://localhost:5173
 
 A working backend and configured database are required for authenticated operations.
 
+
 ## 16. Automated Testing
 
-### Frontend Component Tests
+The Warehouse Picker Route Optimization Platform uses automated tests to verify backend business logic, warehouse route calculation, API security, database integration, and frontend workflows.
 
-The frontend uses Vitest and React Testing Library.
+### Backend Testing
+
+The backend test suite uses JUnit 5, Mockito, Spring Boot Test, MockMvc, and Testcontainers.
+
+The tests cover:
+
+- Graph shortest-path calculations and route optimization.
+- Weight-aware and S-shape route-planning strategies.
+- Picking task creation, assignment, collection, and completion.
+- Task state transitions and role-based access restrictions.
+- Warehouse management and graph validation.
+- Inventory availability and route calculation prerequisites.
+- Centralized exception handling.
+- Spring Boot integration with PostgreSQL and Flyway.
+
+The integration tests run against an isolated PostgreSQL 17 database managed by Testcontainers.
+
+#### Verified Backend Test Results
+
+| Metric | Result |
+|---|---:|
+| Total backend tests | 93 |
+| Passed | 93 |
+| Failed | 0 |
+| Errors | 0 |
+| Skipped | 0 |
+| Instruction coverage | 77% |
+| Branch coverage | 71% |
+| Service instruction coverage | 83% |
+| Service branch coverage | 80% |
+
+Results were verified locally on November 23, 2026.
+
+#### Running Backend Tests
+
+From the repository root on Windows:
+
+```powershell
+cd backend
+.\mvnw.cmd clean verify
+```
+
+The command compiles the application, runs the automated tests, generates the JaCoCo coverage report, and verifies the required coverage thresholds.
+
+The HTML coverage report is available at:
+
+`backend/target/site/jacoco/index.html`
+
+### JaCoCo Coverage Quality Gate
+
+The project uses JaCoCo 0.8.14 to measure backend code coverage.
+
+The Maven build enforces the following minimum thresholds:
+
+| Coverage Metric | Minimum | Verified |
+|---|---:|---:|
+| Instructions | 70% | 77% |
+| Branches | 70% | 71% |
+
+The coverage requirements are enforced during the Maven `verify` phase.
+
+If either threshold is not met, the build fails.
+
+Verified output:
+
+```text
+All coverage checks have been met.
+BUILD SUCCESS
+```
+
+### Frontend Component Testing
+
+The React frontend uses Vitest and React Testing Library.
 
 | Component | Tests | Result |
 |---|---:|---|
@@ -573,76 +646,130 @@ The frontend uses Vitest and React Testing Library.
 | InteractiveWarehouseMap | 3 | Passed |
 | **Total** | **7** | **Passed** |
 
-Run:
+Run from the repository root:
 
 ```powershell
 cd frontend
+npm ci
 npm run test
 ```
 
-### End-to-End Tests
+### End-to-End Testing
 
-Playwright verifies:
+Playwright and Chromium are used to verify browser-based workflows.
 
-1. Manager authentication, task navigation, and route calculation.
-2. Picker authentication, assigned task navigation, and role-specific UI permissions.
+The two locally verified scenarios are:
 
-Latest verified local result:
+1. Manager authentication, picking task navigation, and route calculation.
+2. Picker authentication, assigned task navigation, and role-specific interface restrictions.
 
-**2 of 2 E2E tests passed.**
+**Verified local result: 2 of 2 E2E tests passed.**
 
-Run:
+Run from the frontend directory:
 
 ```powershell
 npm run test:e2e
 ```
 
-The backend must be running, and valid test account credentials must be supplied through environment variables.
+The E2E tests require a running backend, a configured database, suitable test records, and dedicated manager and picker credentials.
 
-### Backend Tests
-
-The backend includes JUnit, Mockito, and Testcontainers-based tests.
-
-Run from the backend directory:
-
-```powershell
-.\mvnw.cmd clean verify
-```
-
-The JaCoCo report is generated at:
-
-`backend/target/site/jacoco/index.html`
-
-The backend coverage percentage must be verified against the current build before claiming compliance with the 70% coverage requirement.
+Playwright E2E tests are not yet executed in GitHub Actions.
 
 ### Testing Documentation
 
+Detailed testing documentation is available in:
+
+- [Automated Testing and Coverage](docs/testing/AUTOMATED_TESTING.md)
 - [Frontend Testing](docs/frontend/TESTING.md)
-- [Front-end Criterion](docs/frontend/FRONTEND_CRITERION.md)
+- [Front-End Assessment](docs/frontend/FRONTEND_CRITERION.md)
 
 ## 17. Continuous Integration
 
-GitHub Actions workflows are used for automated verification.
+The repository uses GitHub Actions to run automated verification on repository changes.
 
-| Workflow | Purpose |
-|---|---|
-| `backend-tests.yml` | Java tests and JaCoCo report generation |
-| `frontend-ci.yml` | React component tests and Vite production build |
+### Backend CI
 
-The frontend workflow performs:
+Workflow: `.github/workflows/backend-tests.yml`
 
-```mermaid
-flowchart LR
-    A[Checkout] --> B[Install Dependencies]
-    B --> C[Run Vitest]
-    C --> D[TypeScript Build]
-    D --> E[Vite Production Build]
-    E --> F[Upload Build Artifact]
+The backend pipeline:
+
+1. Checks out the repository.
+2. Configures Java 21.
+3. Runs Maven tests and integration tests.
+4. Starts an isolated PostgreSQL environment through Testcontainers.
+5. Generates JaCoCo coverage reports.
+6. Enforces the 70% instruction and branch coverage thresholds.
+7. Uploads test results and coverage reports as workflow artifacts.
+
+The pipeline executes:
+
+```bash
+./mvnw --batch-mode clean verify
 ```
 
-The frontend CI workflow must be verified after pushing the latest source files to GitHub.
+#### Verified Backend CI Execution
 
-The Playwright E2E scenarios have been verified locally and are not currently included in the remote CI pipeline.
+| Property | Value |
+|---|---|
+| Workflow | Backend Tests |
+| Commit | `4a691b4` |
+| Date | November 23, 2026 |
+| Build | Success |
+| Coverage Quality Gate | Passed |
+| Test Report Artifact | `junit-test-results` |
+| Coverage Report Artifact | `jacoco-report` |
+
+The GitHub Actions logs confirm:
+
+```text
+All coverage checks have been met.
+BUILD SUCCESS
+```
+
+[Successful Backend CI Run](https://github.com/Vladkosheliuk/warehouse-picker-route-optimization/actions/runs/45263297187)
+
+### Frontend CI
+
+Workflow: `.github/workflows/frontend-ci.yml`
+
+The frontend pipeline performs dependency installation, Vitest component testing, TypeScript compilation, and production build verification.
+
+The main commands are:
+
+```bash
+npm ci
+npm run test
+npm run build
+```
+
+The production build is uploaded as a GitHub Actions artifact.
+
+Playwright E2E tests are currently verified locally and are not included in the frontend CI workflow.
+
+### CI Workflow Overview
+
+```mermaid
+flowchart TD
+    A[Push or Pull Request] --> B{Affected Workflow}
+
+    B --> C[Backend CI]
+    B --> D[Frontend CI]
+
+    C --> E[Java 21 and Maven]
+    E --> F[JUnit and Testcontainers]
+    F --> G[JaCoCo Coverage Check]
+    G --> H{Coverage at least 70%?}
+
+    H -- Yes --> I[Backend Build Success]
+    H -- No --> J[Backend Build Failure]
+
+    D --> K[Node.js and npm]
+    K --> L[Vitest Tests]
+    L --> M[TypeScript and Vite Build]
+    M --> N[Frontend Build Artifact]
+```
+
+The automated workflows provide reproducible verification of the published application source.
 
 [GitHub Actions](https://github.com/Vladkosheliuk/warehouse-picker-route-optimization/actions)
 
