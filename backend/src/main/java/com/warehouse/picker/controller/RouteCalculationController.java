@@ -14,6 +14,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.warehouse.picker.dto.ApiError;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
+import com.warehouse.picker.service.PickingTaskService;
+import org.springframework.security.core.Authentication;
+
 
 @RestController
 @RequestMapping("/api/routes")
@@ -24,11 +27,14 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 public class RouteCalculationController {
 
     private final RouteCalculationService routeCalculationService;
+    private final PickingTaskService pickingTaskService;
 
     public RouteCalculationController(
-            RouteCalculationService routeCalculationService
+            RouteCalculationService routeCalculationService,
+            PickingTaskService pickingTaskService
     ) {
         this.routeCalculationService = routeCalculationService;
+        this.pickingTaskService = pickingTaskService;
     }
 
     @PostMapping(
@@ -115,18 +121,22 @@ public class RouteCalculationController {
             )
     })
 
+
     public ResponseEntity<RouteCalculationService.RouteComparison>
     calculateRoutes(
-            @Parameter(
-                    description = "Identifier of an existing picking task",
-                    required = true,
-                    example = "1"
-            )
-            @PathVariable Long taskId
+            @PathVariable Long taskId,
+            @io.swagger.v3.oas.annotations.Parameter(hidden = true)
+            Authentication authentication
     ) {
+        pickingTaskService.assertRouteAccessible(
+                taskId,
+                authentication
+        );
+
         RouteCalculationService.RouteComparison result =
                 routeCalculationService.calculateRoutes(taskId);
 
         return ResponseEntity.ok(result);
     }
+
 }

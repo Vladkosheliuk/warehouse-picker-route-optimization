@@ -42,12 +42,27 @@ public class SecurityConfig {
                                 "/v3/api-docs.yaml"
                         ).permitAll()
 
+                        // Only managers can manage warehouses
                         .requestMatchers("/api/warehouses/**")
                         .hasRole("MANAGER")
 
+                        // Managers and pickers can calculate routes
                         .requestMatchers("/api/routes/**")
                         .hasAnyRole("MANAGER", "PICKER")
 
+                        // Only managers can create and view user accounts
+                        .requestMatchers("/api/users", "/api/users/**")
+                        .hasRole("MANAGER")
+
+
+                        .requestMatchers("/api/tasks", "/api/tasks/**")
+                        .hasAnyRole("MANAGER", "PICKER")
+
+                        .requestMatchers("/api/catalog/**")
+                        .hasRole("MANAGER")
+
+
+                        // All other endpoints require authentication
                         .anyRequest().authenticated()
                 )
 

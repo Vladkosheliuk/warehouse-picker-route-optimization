@@ -1,0 +1,256 @@
+
+.tasks-page {
+    width: 100%;
+}
+
+.tasks-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+    margin-bottom: 22px;
+}
+
+.tasks-stat,
+.tasks-panel,
+.tasks-card {
+    background: #fff;
+    border: 1px solid #e6ebf3;
+    border-radius: 16px;
+}
+
+.tasks-stat {
+    padding: 24px;
+}
+
+.tasks-stat span {
+    display: block;
+    color: #8491a4;
+    font-size: 12px;
+}
+
+.tasks-stat strong {
+    display: block;
+    margin-top: 10px;
+    color: #17263d;
+    font-size: 30px;
+}
+
+.tasks-panel {
+    padding: 26px;
+    margin-bottom: 22px;
+}
+
+.tasks-panel h2 {
+    font-size: 21px;
+    margin: 9px 0 22px;
+}
+
+.tasks-panel-header,
+.tasks-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+}
+
+.tasks-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.tasks-form label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #34455d;
+}
+
+.tasks-form input,
+.tasks-form select,
+.tasks-line-editor input,
+.tasks-line-editor select,
+.tasks-actions select,
+.tasks-collect input {
+    min-height: 44px;
+    border: 1px solid #dce3ed;
+    border-radius: 9px;
+    padding: 9px 12px;
+    background: #fafbfe;
+    color: #17263d;
+    font: inherit;
+}
+
+.tasks-form h3 {
+    margin: 20px 0 4px;
+    font-size: 16px;
+}
+
+.tasks-line-editor {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 110px auto;
+    gap: 10px;
+    align-items: center;
+}
+
+.tasks-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 18px;
+}
+
+.tasks-actions button,
+.tasks-line-editor button,
+.tasks-collect button {
+    cursor: pointer;
+}
+
+.tasks-actions button:disabled,
+.tasks-line-editor button:disabled,
+.tasks-collect button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.tasks-secondary,
+.tasks-line-editor button,
+.tasks-collect button {
+    border: 1px solid #dce4ef;
+    background: #edf2fa;
+    color: #385478;
+    padding: 11px 14px;
+    border-radius: 9px;
+    font-weight: 700;
+}
+
+.tasks-danger {
+    border: 0;
+    background: #fff0f1;
+    color: #b13c4b;
+    padding: 11px 14px;
+    border-radius: 9px;
+    font-weight: 700;
+}
+
+.tasks-list {
+    display: grid;
+    gap: 15px;
+}
+
+.tasks-card {
+    padding: 23px;
+}
+
+.tasks-card h3 {
+    margin: 0 0 6px;
+    font-size: 18px;
+    color: #17263d;
+}
+
+.tasks-card-header p,
+.tasks-note {
+    color: #8491a4;
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+.tasks-status {
+    padding: 8px 11px;
+    background: #eaf0ff;
+    border-radius: 8px;
+    color: #385fba;
+    font-size: 11px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.tasks-products {
+    margin-top: 20px;
+    border-top: 1px solid #edf0f5;
+}
+
+.tasks-product {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 0;
+    border-bottom: 1px solid #edf0f5;
+}
+
+.tasks-product strong,
+.tasks-product span {
+    display: block;
+}
+
+.tasks-product strong {
+    color: #223751;
+    font-size: 13px;
+}
+
+.tasks-product span {
+    color: #8491a4;
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+.tasks-collect {
+    display: flex;
+    gap: 8px;
+}
+
+.tasks-collect input {
+    width: 76px;
+}
+
+.tasks-route {
+    margin-top: 20px;
+    padding: 18px;
+    background: #f6f8fd;
+    border-radius: 12px;
+    overflow-wrap: anywhere;
+}
+
+.tasks-route h4 {
+    color: #213857;
+}
+
+.tasks-route p {
+    font-size: 12px;
+    line-height: 1.7;
+    color: #5d708b;
+}
+
+.tasks-alert {
+    padding: 14px 16px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    font-size: 13px;
+}
+
+.tasks-alert.error {
+    color: #a92d40;
+    background: #fff0f1;
+}
+
+.tasks-alert.success {
+    color: #14764d;
+    background: #e9f8f0;
+}
+
+@media (max-width: 720px) {
+    .tasks-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .tasks-line-editor {
+        grid-template-columns: 1fr;
+    }
+
+    .tasks-card-header,
+    .tasks-product {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}

@@ -1,0 +1,234 @@
+
+.warehouse-page {
+    width: 100%;
+}
+
+.warehouse-summary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+    margin-bottom: 24px;
+}
+
+.warehouse-stat,
+.warehouse-panel {
+    background: #fff;
+    border: 1px solid #e7ecf4;
+    border-radius: 16px;
+}
+
+.warehouse-stat {
+    padding: 24px;
+}
+
+.warehouse-stat > span {
+    display: block;
+    color: #8290a4;
+    font-size: 12px;
+}
+
+.warehouse-stat > strong {
+    display: block;
+    margin-top: 12px;
+    color: #17263d;
+    font-size: 31px;
+}
+
+.warehouse-stat .warehouse-stat-text {
+    font-size: 20px;
+}
+
+.warehouse-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(300px, 1fr);
+    align-items: start;
+    gap: 20px;
+}
+
+.warehouse-panel {
+    padding: 26px;
+    min-width: 0;
+}
+
+.warehouse-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.warehouse-panel-header h2 {
+    font-size: 21px;
+    color: #17263d;
+    margin: 9px 0 0;
+}
+
+.warehouse-secondary-btn {
+    background: #f0f4fb;
+    border: 1px solid #e0e7f1;
+    border-radius: 9px;
+    color: #385178;
+    padding: 11px 15px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.warehouse-secondary-btn:disabled,
+.warehouse-actions button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.warehouse-table-wrapper {
+    overflow-x: auto;
+}
+
+.warehouse-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 13px;
+}
+
+.warehouse-table th {
+    color: #8996a9;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    padding: 15px 10px;
+    border-bottom: 1px solid #e8edf4;
+}
+
+.warehouse-table td {
+    padding: 18px 10px;
+    color: #53647c;
+    border-bottom: 1px solid #eef1f6;
+    vertical-align: middle;
+}
+
+.warehouse-table td strong {
+    color: #21354f;
+}
+
+.warehouse-id {
+    background: #edf2ff;
+    color: #4267c8;
+    padding: 7px 9px;
+    border-radius: 7px;
+    font-weight: 700;
+}
+
+.warehouse-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.warehouse-actions button {
+    background: #eef3ff;
+    border: none;
+    color: #4168c9;
+    border-radius: 7px;
+    padding: 8px 10px;
+    cursor: pointer;
+    font-weight: 700;
+}
+
+.warehouse-actions .warehouse-delete {
+    background: #fff0f1;
+    color: #bb4352;
+}
+
+.warehouse-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.warehouse-form label {
+    color: #354760;
+    font-size: 13px;
+    font-weight: 700;
+    margin-top: 9px;
+}
+
+.warehouse-form input,
+.warehouse-form textarea {
+    width: 100%;
+    background: #fafbfe;
+    border: 1px solid #dce3ed;
+    border-radius: 9px;
+    padding: 13px;
+    font: inherit;
+    font-size: 13px;
+    color: #17263d;
+}
+
+.warehouse-form textarea {
+    resize: vertical;
+    min-height: 110px;
+}
+
+.warehouse-form input:focus,
+.warehouse-form textarea:focus {
+    outline: none;
+    border-color: #527cf8;
+    box-shadow: 0 0 0 3px rgba(82, 124, 248, 0.12);
+}
+
+.warehouse-form .primary-button {
+    margin-top: 14px;
+}
+
+.warehouse-help {
+    color: #8a97a9;
+    line-height: 1.7;
+    font-size: 12px;
+    margin: 23px 0 0;
+}
+
+.warehouse-empty {
+    padding: 60px 15px;
+    text-align: center;
+    color: #8996a8;
+    font-size: 13px;
+}
+
+.warehouse-alert {
+    padding: 14px 16px;
+    margin-bottom: 20px;
+    border-radius: 10px;
+    font-size: 13px;
+}
+
+.warehouse-alert.error {
+    background: #fff0f2;
+    color: #ae293e;
+    border: 1px solid #f7cbd2;
+}
+
+.warehouse-alert.success {
+    background: #eaf9f1;
+    color: #15764e;
+    border: 1px solid #bfebd1;
+}
+
+@media (max-width: 1150px) {
+    .warehouse-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 700px) {
+    .warehouse-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .warehouse-panel {
+        padding: 18px;
+    }
+
+    .warehouse-panel-header {
+        flex-wrap: wrap;
+    }
+}
