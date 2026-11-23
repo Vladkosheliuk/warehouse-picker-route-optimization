@@ -450,15 +450,15 @@ The Java backend connection was successfully verified using the restricted `ware
 
 ### Verification Scripts
 
-- [Constraint Tests](../database/tests/01_test_constraints.sql)
-- [Transaction Tests](../database/tests/02_test_transactions.sql)
-- [Permission Tests](../database/security/03_verify_permissions.sql)
+- [Constraint Tests](../../database/tests/01_test_constraints.sql)
+- [Transaction Tests](../../database/tests/02_test_transactions.sql)
+- [Permission Tests](../../database/security/03_verify_permissions.sql)
 
 ## 17. Related Documentation
 
 - [Database Schema](DATABASE_SCHEMA.md)
 - [Database Setup](DATABASE_SETUP.md)
 - [Logical Database Diagram](database_schema.png)
-- [Flyway Migrations](../backend/src/main/resources/db/migration/)
-- [Database Security Scripts](../database/security/)
-- [Project README](../README.md)
+- [Flyway Migrations](../../backend/src/main/resources/db/migration/)
+- [Database Security Scripts](../../database/security/)
+- [Project README](../../README.md)

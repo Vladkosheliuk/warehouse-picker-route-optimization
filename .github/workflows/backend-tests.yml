@@ -1,0 +1,60 @@
+
+name: Backend Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backend-tests:
+    name: Java Tests and Coverage
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    env:
+      # Fail closed if Testcontainers does not override
+      # the application database connection.
+      DB_URL: jdbc:postgresql://127.0.0.1:9/unavailable
+      DB_USERNAME: unused
+      DB_PASSWORD: unused
+      FLYWAY_USERNAME: unused
+      FLYWAY_PASSWORD: unused
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+          cache-dependency-path: backend/pom.xml
+
+      - name: Run tests and generate coverage
+        working-directory: backend
+        run: |
+          chmod +x mvnw
+          ./mvnw --batch-mode clean verify
+
+      - name: Upload JaCoCo report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report
+          path: backend/target/site/jacoco/
+          if-no-files-found: warn
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: junit-test-results
+          path: backend/target/surefire-reports/
+          if-no-files-found: warn

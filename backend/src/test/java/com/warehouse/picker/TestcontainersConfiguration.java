@@ -1,3 +1,4 @@
+
 package com.warehouse.picker;
 
 import org.springframework.boot.test.context.TestConfiguration;
@@ -12,7 +13,11 @@ class TestcontainersConfiguration {
     @Bean
     @ServiceConnection
     PostgreSQLContainer postgresContainer() {
-        return new PostgreSQLContainer(DockerImageName.parse("postgres:latest"));
+        return new PostgreSQLContainer(
+                DockerImageName.parse("postgres:17")
+        )
+                .withDatabaseName("warehouse_picker_test")
+                .withUsername("test_user")
+                .withPassword("test_password");
     }
-
 }

@@ -1,0 +1,359 @@
+openapi: 3.1.0
+info:
+  title: Warehouse Picker Route Optimization API
+  description: "REST API for warehouse management, picking tasks and weight-aware\
+    \ route optimization."
+  version: 1.0.0
+servers:
+- url: http://localhost:8080
+  description: Generated server url
+security:
+- basicAuth: []
+tags:
+- name: Warehouse Management
+  description: "Create, retrieve, update and delete warehouses. Requires the MANAGER\
+    \ role."
+- name: Route Optimization
+  description: Calculation and comparison of warehouse picking routes
+paths:
+  /api/warehouses/{id}:
+    get:
+      tags:
+      - Warehouse Management
+      summary: Get warehouse by ID
+      description: Returns warehouse details for the given ID.
+      operationId: getWarehouseById
+      parameters:
+      - name: id
+        in: path
+        description: Warehouse ID
+        required: true
+        schema:
+          type: integer
+          format: int64
+        example: 1
+      responses:
+        "200":
+          description: Warehouse found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WarehouseDTO"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WarehouseDTO"
+        "403":
+          description: Manager role required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WarehouseDTO"
+        "404":
+          description: Warehouse not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+    put:
+      tags:
+      - Warehouse Management
+      summary: Update a warehouse
+      description: Updates the name and description of an existing warehouse.
+      operationId: updateWarehouse
+      parameters:
+      - name: id
+        in: path
+        description: Warehouse ID
+        required: true
+        schema:
+          type: integer
+          format: int64
+        example: 1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WarehouseDTO"
+        required: true
+      responses:
+        "200":
+          description: Warehouse updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WarehouseDTO"
+        "400":
+          description: Invalid warehouse data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WarehouseDTO"
+        "403":
+          description: Manager role required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WarehouseDTO"
+        "404":
+          description: Warehouse not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+    delete:
+      tags:
+      - Warehouse Management
+      summary: Delete a warehouse
+      description: Deletes an existing warehouse. Deletion may fail if dependent records
+        exist.
+      operationId: deleteWarehouse
+      parameters:
+      - name: id
+        in: path
+        description: Warehouse ID
+        required: true
+        schema:
+          type: integer
+          format: int64
+        example: 1
+      responses:
+        "204":
+          description: Warehouse deleted successfully
+        "401":
+          description: Authentication required
+        "403":
+          description: Manager role required
+        "404":
+          description: Warehouse not found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiError"
+  /api/warehouses:
+    get:
+      tags:
+      - Warehouse Management
+      summary: Get all warehouses
+      description: Returns all configured warehouses.
+      operationId: getAllWarehouses
+      responses:
+        "200":
+          description: Warehouses retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WarehouseDTO"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WarehouseDTO"
+        "403":
+          description: Manager role required
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WarehouseDTO"
+    post:
+      tags:
+      - Warehouse Management
+      summary: Create a warehouse
+      description: Creates a warehouse with a name and an optional description.
+      operationId: createWarehouse
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WarehouseDTO"
+        required: true
+      responses:
+        "201":
+          description: Warehouse created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WarehouseDTO"
+        "400":
+          description: Invalid warehouse data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WarehouseDTO"
+        "403":
+          description: Manager role required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WarehouseDTO"
+  /api/routes/calculate/{taskId}:
+    post:
+      tags:
+      - Route Optimization
+      summary: Calculate and compare picking routes
+      description: |
+        Calculates two routes for an existing picking task.
+
+        OPTIMIZED: a greedy weight-aware routing heuristic.
+
+        S_SHAPE: a coordinate-based S-shape baseline.
+
+        Both algorithms use identical warehouse nodes,
+        paths, products, quantities and product weights.
+
+        The response contains picking stops, travel distance,
+        accumulated load-distance cost and the full path.
+
+        The operation calculates routes without saving
+        them to the database.
+      operationId: calculateRoutes
+      parameters:
+      - name: taskId
+        in: path
+        description: Identifier of an existing picking task
+        required: true
+        schema:
+          type: integer
+          format: int64
+        example: 1
+      responses:
+        "200":
+          description: Both routes calculated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RouteComparison"
+        "400":
+          description: Invalid route calculation parameters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Authentication is required
+        "403":
+          description: User does not have the required role
+        "404":
+          description: Picking task not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+              examples:
+                Task not found:
+                  description: Task not found
+                  value:
+                    timestamp: 2026-11-23T00:00:00+02:00
+                    status: 404
+                    error: Not Found
+                    message: "Picking task not found: 999999999"
+                    path: /api/routes/calculate/999999999
+        "409":
+          description: Warehouse data or stock prevents route calculation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+components:
+  schemas:
+    WarehouseDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+          maxLength: 150
+          minLength: 0
+        description:
+          type: string
+          maxLength: 1000
+          minLength: 0
+      required:
+      - name
+    ApiError:
+      type: object
+      description: Standard API error response
+      properties:
+        timestamp:
+          type: string
+        status:
+          type: integer
+          format: int32
+        error:
+          type: string
+        message:
+          type: string
+        path:
+          type: string
+    RouteComparison:
+      type: object
+      properties:
+        taskId:
+          type: integer
+          format: int64
+        warehouseId:
+          type: integer
+          format: int64
+        optimized:
+          $ref: "#/components/schemas/RouteResult"
+        sShape:
+          $ref: "#/components/schemas/RouteResult"
+    RouteResult:
+      type: object
+      properties:
+        stops:
+          type: array
+          items:
+            $ref: "#/components/schemas/RouteStop"
+        totalDistanceM:
+          type: number
+        loadDistanceKgM:
+          type: number
+        fullPathNodeIds:
+          type: array
+          items:
+            type: integer
+            format: int64
+    RouteStop:
+      type: object
+      properties:
+        nodeId:
+          type: integer
+          format: int64
+        productId:
+          type: integer
+          format: int64
+        quantity:
+          type: integer
+          format: int32
+        distanceFromPreviousM:
+          type: number
+        carriedWeightAfterKg:
+          type: number
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic

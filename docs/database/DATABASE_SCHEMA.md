@@ -253,7 +253,7 @@ PostgreSQL constraints provide database-level validation, while application tran
 
 The database schema is created through five versioned Flyway SQL migrations located in:
 
-[backend/src/main/resources/db/migration/](../backend/src/main/resources/db/migration/)
+[backend/src/main/resources/db/migration/](../../backend/src/main/resources/db/migration/)
 
 Flyway applies pending migrations in version order when the backend starts and records their execution in `flyway_schema_history`.
 
@@ -306,7 +306,7 @@ Database permission tests confirmed that:
 - The application role cannot modify Flyway migration history.
 - The backend successfully connects using `warehouse_app`.
 
-Security configuration scripts are available in [database/security/](../database/security/).
+Security configuration scripts are available in [database/security/](../../database/security/).
 
 ## 13. Database Testing
 
@@ -336,15 +336,15 @@ The test confirmed that neither the task nor its previously inserted item remain
 
 ### Test Scripts
 
-- [Test Data](../database/seed/01_seed_test_data.sql)
-- [Constraint Tests](../database/tests/01_test_constraints.sql)
-- [Transaction Tests](../database/tests/02_test_transactions.sql)
-- [Permission Tests](../database/security/03_verify_permissions.sql)
+- [Test Data](../../database/seed/01_seed_test_data.sql)
+- [Constraint Tests](../../database/tests/01_test_constraints.sql)
+- [Transaction Tests](../../database/tests/02_test_transactions.sql)
+- [Permission Tests](../../database/security/03_verify_permissions.sql)
 
 ## 14. Related Documentation
 
 - [Database Setup](DATABASE_SETUP.md)
 - [Data Dictionary](DATA_DICTIONARY.md)
 - [Logical Database Diagram](database_schema.png)
-- [SQL Migrations](../backend/src/main/resources/db/migration/)
-- [Project README](../README.md)
+- [SQL Migrations](../../backend/src/main/resources/db/migration/)
+- [Project README](../../README.md)
