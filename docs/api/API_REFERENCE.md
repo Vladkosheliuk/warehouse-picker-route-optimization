@@ -1,121 +1,346 @@
-# API Reference (OpenAPI 3.1)
 
-**Base URL (local):** `http://localhost:8080`
+# Warehouse Picker Route Optimization API — Reference
 
-**Interactive docs:** `/swagger-ui.html`
-**Machine-readable specification:** [`openapi.yaml`](openapi.yaml)
+- **API version:** 1.0.0
+- **Specification:** OpenAPI 3.1
+- **Local base URL:** `http://localhost:8080`
+- **Authentication:** HTTP Basic
+- **Interactive documentation:** [Swagger UI](http://localhost:8080/swagger-ui/index.html)
+**Machine-readable contract:** [openapi.yaml](openapi.yaml)
 
-The table and examples below describe the **six currently implemented HTTP operations**. API access is protected by HTTP Basic authentication; the application does not yet issue JWTs. Examples use made-up warehouse names and IDs unless explicitly identified as a demonstrated dataset. Passwords and authorization tokens are intentionally omitted.
+## Overview
 
-## Access control
+The API supports warehouse administration, user management, importing warehouse graphs, product availability lookup, task assignment and fulfillment, and calculation of two picking-route strategies.
 
-| Path | Allowed role(s) |
+The current controller set exposes **21 HTTP operations**. Route calculation is read-like but uses `POST`; it does not persist calculated routes.
+
+## Authentication and authorization
+
+All `/api/**` operations require authentication. Use an HTTP Basic `Authorization` header over HTTPS outside local development.
+
+| Area | Permitted roles |
 |---|---|
-| `/api/warehouses`, `/api/warehouses/{id}` | `MANAGER` |
-| `/api/routes/calculate/{taskId}` | `MANAGER`, `PICKER` |
-| `/actuator/health`, `/swagger-ui/**`, `/v3/api-docs`, `/v3/api-docs.yaml` | Public endpoints |
+| `GET /api/auth/me` | `MANAGER`, `PICKER` |
+| `/api/warehouses/**` | `MANAGER` |
+| `/api/users` | `MANAGER` |
+| `/api/catalog/products` | `MANAGER` |
+| `GET /api/tasks`, `POST /api/tasks`, `POST /api/tasks/{id}/assign`, `POST /api/tasks/{id}/cancel` | `MANAGER` |
+| `GET /api/tasks/my`, `POST /api/tasks/{id}/start`, `POST /api/tasks/{id}/items/{itemId}/collect`, `POST /api/tasks/{id}/complete` | `PICKER` |
+| `GET /api/tasks/{id}` | `MANAGER` or assigned `PICKER` |
+| `POST /api/routes/calculate/{taskId}` | `MANAGER` or assigned `PICKER` for an available task |
 
-The current route endpoint checks role membership but **does not yet verify that a PICKER is assigned to the requested task**. This is an implementation limitation, not a security feature.
+Role restrictions for tasks are checked in `PickingTaskService`. A picker cannot retrieve or calculate another picker's task. The backend additionally rejects use of inactive accounts when task operations resolve the current user.
 
-## Warehouse data model
+**Note:** `/actuator/health`, Swagger UI, and OpenAPI endpoints are publicly readable in the current security configuration.
 
-`WarehouseDTO` (JSON):
+## Endpoint index
+
+| Method | Path | Purpose | Role | Success |
+|---|---|---|---|---|
+| `GET` | `/api/auth/me` | Current username and role | Both | `200` |
+| `GET` | `/api/warehouses` | List warehouses | Manager | `200` |
+| `GET` | `/api/warehouses/{id}` | Get warehouse | Manager | `200` |
+| `POST` | `/api/warehouses` | Create warehouse | Manager | `201` |
+| `PUT` | `/api/warehouses/{id}` | Update warehouse | Manager | `200` |
+| `DELETE` | `/api/warehouses/{id}` | Delete warehouse | Manager | `204` |
+| `GET` | `/api/warehouses/{warehouseId}/map` | Get warehouse graph | Manager | `200` |
+| `POST` | `/api/warehouses/{warehouseId}/map/import` | Import graph into empty warehouse | Manager | `201` |
+| `GET` | `/api/users` | List user accounts | Manager | `200` |
+| `POST` | `/api/users` | Create user account | Manager | `201` |
+| `GET` | `/api/catalog/products?warehouseId={id}` | Products in warehouse with stock | Manager | `200` |
+| `GET` | `/api/tasks` | List all tasks | Manager | `200` |
+| `GET` | `/api/tasks/my` | List own assigned tasks | Picker | `200` |
+| `GET` | `/api/tasks/{id}` | Get a task | Manager / assigned picker | `200` |
+| `POST` | `/api/tasks` | Create and assign task | Manager | `201` |
+| `POST` | `/api/tasks/{id}/assign` | Assign or reassign task | Manager | `200` |
+| `POST` | `/api/tasks/{id}/start` | Start assigned task | Picker | `200` |
+| `POST` | `/api/tasks/{id}/items/{itemId}/collect` | Record collected quantity | Picker | `200` |
+| `POST` | `/api/tasks/{id}/complete` | Complete task | Picker | `200` |
+| `POST` | `/api/tasks/{id}/cancel` | Cancel task | Manager | `200` |
+| `POST` | `/api/routes/calculate/{taskId}` | Compare optimized and S-shape routes | Manager / assigned picker | `200` |
+
+## 1. Authentication
+
+### `GET /api/auth/me`
+
+Returns the username and role of the authenticated account. No request body.
+
+Example `200 OK` response:
+
+```json
+{
+  "username": "picker_demo",
+  "role": "PICKER"
+}
+```
+
+The login name is illustrative. Invalid or missing Basic credentials yield `401`. An unsupported application role is rejected with `403`.
+
+## 2. Warehouse management
+
+All five operations require `MANAGER`.
+
+### `GET /api/warehouses`
+
+Returns an array of `WarehouseDTO` objects; an empty database returns `[]`.
+
+### `GET /api/warehouses/{id}`
+
+Returns the warehouse with the specified numeric database ID, or `404` when missing.
+
+### `POST /api/warehouses`
+
+Request body:
+
+```json
+{
+  "name": "API Test Warehouse",
+  "description": "Disposable warehouse for integration testing"
+}
+```
+
+Example `201 Created` response (generated ID varies):
 
 ```json
 {
   "id": 42,
-  "name": "Demo Warehouse",
-  "description": "Warehouse for API testing"
+  "name": "API Test Warehouse",
+  "description": "Disposable warehouse for integration testing"
 }
 ```
 
-- `id`: integer (int64), generated by the database; do not rely on a client-supplied value for creation.
-- `name`: required, non-blank string. The SQL column is `VARCHAR(150)`; the DTO validation must also enforce a 150-character maximum.
-- `description`: optional string, maximum 1000 characters at the API validation layer.
+### `PUT /api/warehouses/{id}`
 
-## 1. GET /api/warehouses
+Replaces the editable name and description of an existing warehouse. Returns updated `WarehouseDTO` with `200`; missing warehouse yields `404`.
 
-**Summary:** List configured warehouses. **Role:** MANAGER.
+### `DELETE /api/warehouses/{id}`
 
-Request: `GET http://localhost:8080/api/warehouses` with Basic authentication. No body.
+Deletes an existing warehouse. A successful response is `204 No Content` without a JSON body. Deletion may fail due to database foreign keys when related graph or task records exist; the current exception handling does not guarantee a standardized `409` for these database-level failures.
 
-Example successful response, HTTP **200**:
+### `WarehouseDTO` fields
+
+| Field | Type | Constraints |
+|---|---|---|
+| `id` | int64, nullable in input | Assigned by database |
+| `name` | string | Required, nonblank, at most 150 characters |
+| `description` | string or null | Optional, at most 1000 characters |
+
+## 3. Warehouse maps
+
+Both operations require `MANAGER`.
+
+### `GET /api/warehouses/{warehouseId}/map`
+
+Returns the stored warehouse graph in `WarehouseMapDTO` format. Missing warehouse returns `404`. A warehouse without a map can return empty `nodes` and `edges` arrays.
+
+### `POST /api/warehouses/{warehouseId}/map/import`
+
+Imports a graph **only into a warehouse with no existing nodes or edges**. Returns `201 Created` and the submitted `WarehouseMapDTO`. Re-importing an existing map results in `409`.
+
+Minimal example request:
+
+```json
+{
+  "nodes": [
+    {"code": "ENTRY", "type": "ENTRANCE", "x": 0, "y": 0},
+    {"code": "S01", "type": "STORAGE", "x": 10, "y": 0},
+    {"code": "EXIT", "type": "EXIT", "x": 20, "y": 0}
+  ],
+  "edges": [
+    {"from": "ENTRY", "to": "S01", "distanceM": 10, "bidirectional": true},
+    {"from": "S01", "to": "EXIT", "distanceM": 10, "bidirectional": true}
+  ]
+}
+```
+
+Constraints:
+
+- `nodes`: 3–1000 entries; `edges`: 1–5000 entries.
+- Each node has a unique `code` matching `[A-Za-z0-9_-]{1,50}`, a valid `type`, and decimal `x`/`y` coordinates.
+- Node types: `ENTRANCE`, `EXIT`, `INTERSECTION`, `STORAGE`.
+- Edge fields: `from`, `to`, positive `distanceM` (at least `0.01`), and `bidirectional`.
+- Exactly one entrance, one exit, and at least one storage node are required.
+- Duplicate or self-referencing edges and unknown node references are rejected.
+- All graph nodes must be reachable from the entrance and must have a path to the exit, respecting edge direction.
+
+Validation failures generally return `400`; existing maps return `409`.
+
+## 4. User management
+
+Both operations require `MANAGER`.
+
+### `GET /api/users`
+
+Returns an array of user accounts without password hashes.
+
+Illustrative `200 OK` response:
 
 ```json
 [
-  {"id": 42, "name": "Demo Warehouse", "description": "Warehouse for API testing"}
+  {
+    "id": 3,
+    "username": "picker_demo",
+    "fullName": "Demo Picker",
+    "role": "PICKER",
+    "active": true
+  }
 ]
 ```
 
-Possible responses: `200` successful list (which may be empty `[]`); `401` no/wrong credentials; `403` authenticated but not MANAGER.
+### `POST /api/users`
 
-## 2. GET /api/warehouses/{id}
+Creates a `MANAGER` or `PICKER` account. The password is encoded with BCrypt and never returned in the response.
 
-**Summary:** Retrieve one warehouse. **Role:** MANAGER. `id` identifies a warehouse record. The API does not currently enforce a positive-ID annotation.
-
-Request: `GET http://localhost:8080/api/warehouses/42`. No body.
-
-Example response, HTTP **200**:
+Example `CreateUserRequest`:
 
 ```json
-{"id": 42, "name": "Demo Warehouse", "description": "Warehouse for API testing"}
+{
+  "username": "picker_demo",
+  "fullName": "Demo Picker",
+  "password": "replace-with-strong-password",
+  "role": "PICKER"
+}
 ```
 
-Possible responses: `200` found; `401` unauthenticated; `403` wrong role; `404` not found; `400` for a path ID that cannot be converted to a number (framework-provided response format may differ).
+The password is a placeholder, not a usable credential. The response is `201 Created` with a `UserResponse` object.
 
-## 3. POST /api/warehouses
+| Field | Validation |
+|---|---|
+| `username` | Required; matches `[A-Za-z0-9._-]{3,100}` |
+| `fullName` | Required, nonblank, maximum 150 characters |
+| `password` | Required, 12–72 characters |
+| `role` | `MANAGER` or `PICKER` |
 
-**Summary:** Create a warehouse. **Role:** MANAGER. `Content-Type: application/json`.
+A duplicate username yields `409 Conflict`. Bean Validation failures yield `400 Bad Request`.
 
-Example request body:
+## 5. Product catalog
+
+### `GET /api/catalog/products?warehouseId={id}`
+
+**Role:** `MANAGER`.
+
+`warehouseId` is a required numeric query parameter. Returns products with positive available stock aggregated across storage locations in the selected warehouse, sorted by SKU.
+
+Illustrative `200 OK` response:
 
 ```json
-{"name": "Demo Warehouse", "description": "Warehouse for API testing"}
+[
+  {
+    "id": 1,
+    "sku": "DEMO-001",
+    "name": "Demo Product",
+    "weightKg": 0.5,
+    "availableQuantity": 12
+  }
+]
 ```
 
-Example response, HTTP **201** (illustrative new ID):
+Missing warehouse returns `404`. A warehouse with no available products returns `[]`.
+
+## 6. Picking tasks
+
+A task consists of a warehouse, creator, assigned picker, status, timestamps, and task item lines. IDs shown below are illustrative and must be replaced with actual database IDs.
+
+### `POST /api/tasks`
+
+**Role:** `MANAGER`. Creates and assigns a task in `ASSIGNED` state. Returns `201 Created` and `TaskResponse`.
 
 ```json
-{"id": 42, "name": "Demo Warehouse", "description": "Warehouse for API testing"}
+{
+  "warehouseId": 1,
+  "pickerId": 3,
+  "items": [
+    {"productId": 1, "quantity": 2},
+    {"productId": 2, "quantity": 1}
+  ]
+}
 ```
 
-Possible responses: `201` created; `400` invalid input (e.g. missing/blank name, name exceeding 150 characters); `401` unauthenticated; `403` wrong role. The actual generated ID varies.
+Fields `warehouseId`, `pickerId`, `productId`, and `quantity` must be positive. `items` must be nonempty. Duplicate products are rejected (`400`), unknown warehouse/product/picker IDs return `404`, an inactive or non-picker account yields `400`, and insufficient warehouse stock yields `409`.
 
-## 4. PUT /api/warehouses/{id}
+### `GET /api/tasks`
 
-**Summary:** Update warehouse name and description. **Role:** MANAGER. `Content-Type: application/json`.
+**Role:** `MANAGER`. Returns all tasks, newest ID first.
 
-Example request: `PUT http://localhost:8080/api/warehouses/42`.
+### `GET /api/tasks/my`
+
+**Role:** `PICKER`. Returns tasks assigned to the current picker, newest ID first.
+
+### `GET /api/tasks/{id}`
+
+**Role:** `MANAGER` or the picker assigned to this task. Returns `TaskResponse`. Missing task returns `404`; unauthorized task ownership yields `403`.
+
+### `POST /api/tasks/{id}/assign`
+
+**Role:** `MANAGER`. Assigns or reassigns a `NEW` or `ASSIGNED` task and returns `200 OK`.
 
 ```json
-{"name": "Demo Warehouse Updated", "description": "Updated description"}
+{"pickerId": 3}
 ```
 
-Example response, HTTP **200**:
+Other task states yield `409 Conflict`.
+
+### `POST /api/tasks/{id}/start`
+
+**Role:** assigned `PICKER`. Changes state from `ASSIGNED` to `IN_PROGRESS`, sets `startedAt`, and returns the updated task. Other states yield `409`.
+
+### `POST /api/tasks/{id}/items/{itemId}/collect`
+
+**Role:** assigned `PICKER`. Adds collected quantity to one task item when task state is `IN_PROGRESS`.
 
 ```json
-{"id": 42, "name": "Demo Warehouse Updated", "description": "Updated description"}
+{"quantity": 1}
 ```
 
-Possible responses: `200` updated; `400` invalid input; `401` unauthenticated; `403` wrong role; `404` no matching warehouse. Updating uses the path ID, not any ID supplied in the JSON body.
+Quantity must be positive. The cumulative collected quantity cannot exceed `requiredQuantity` (`409`). A nonexistent item returns `404`; an item from another task returns `400`.
 
-## 5. DELETE /api/warehouses/{id}
+**Current limitation:** This operation updates the collected quantity, but does not deduct stock from `product_locations`.
 
-**Summary:** Delete a warehouse. **Role:** MANAGER.
+### `POST /api/tasks/{id}/complete`
 
-Request: `DELETE http://localhost:8080/api/warehouses/42`. No body.
+**Role:** assigned `PICKER`. Only an `IN_PROGRESS` task with every required quantity collected can be completed; otherwise returns `409`. The success response contains the task in `COMPLETED` state.
 
-Successful response: HTTP **204 No Content** (empty response body).
+### `POST /api/tasks/{id}/cancel`
 
-Possible responses: `204` deleted; `401` unauthenticated; `403` wrong role; `404` no matching warehouse. **Important:** database foreign keys may prevent deletion when nodes/tasks refer to this warehouse. The current exception handler does not yet map database integrity failures to a guaranteed `409` response; such a failure may result in a server error until error handling is improved. Never test DELETE on production or populated warehouse data; use a disposable test warehouse.
+**Role:** `MANAGER`. Cancels a task unless it is already `COMPLETED` or `CANCELLED`; invalid state yields `409`.
 
-## 6. POST /api/routes/calculate/{taskId}
+### `TaskResponse` example
 
-**Summary:** Calculate two picking routes for an existing task. **Role:** MANAGER or PICKER. This is a read-like calculation exposed as POST; **it does not save routes in the database**.
+```json
+{
+  "id": 5,
+  "warehouseId": 1,
+  "warehouseName": "Demo Warehouse",
+  "assignedPickerId": 3,
+  "assignedPickerUsername": "picker_demo",
+  "status": "ASSIGNED",
+  "createdAt": "2026-11-23T18:00:00Z",
+  "startedAt": null,
+  "completedAt": null,
+  "items": [
+    {
+      "id": 11,
+      "productId": 1,
+      "sku": "DEMO-001",
+      "productName": "Demo Product",
+      "requiredQuantity": 2,
+      "collectedQuantity": 0
+    }
+  ]
+}
+```
 
-Request: `POST http://localhost:8080/api/routes/calculate/1`, no request body.
+These IDs, product names, and timestamps are illustrative. The actual database determines them.
 
-Example successful response previously returned by the demo task, HTTP **200**, from demonstration task `1` (values depend on data):
+Task status values: `NEW`, `ASSIGNED`, `IN_PROGRESS`, `COMPLETED`, `CANCELLED`.
+
+## 7. Route optimization
+
+### `POST /api/routes/calculate/{taskId}`
+
+**Role:** `MANAGER`, or the picker assigned to the task if its status is `ASSIGNED` or `IN_PROGRESS`. No request body.
+
+Returns a `RouteComparison`:
 
 ```json
 {
@@ -123,86 +348,122 @@ Example successful response previously returned by the demo task, HTTP **200**, 
   "warehouseId": 1,
   "optimized": {
     "stops": [
-      {"nodeId": 9, "productId": 3, "quantity": 2, "distanceFromPreviousM": 20, "carriedWeightAfterKg": 3},
-      {"nodeId": 7, "productId": 1, "quantity": 5, "distanceFromPreviousM": 10, "carriedWeightAfterKg": 3.75},
-      {"nodeId": 8, "productId": 2, "quantity": 3, "distanceFromPreviousM": 20, "carriedWeightAfterKg": 4.8},
-      {"nodeId": 2, "productId": null, "quantity": 0, "distanceFromPreviousM": 30, "carriedWeightAfterKg": 4.8}
+      {
+        "nodeId": 9,
+        "productId": 3,
+        "quantity": 2,
+        "distanceFromPreviousM": 20,
+        "carriedWeightAfterKg": 3
+      },
+      {
+        "nodeId": 2,
+        "productId": null,
+        "quantity": 0,
+        "distanceFromPreviousM": 30,
+        "carriedWeightAfterKg": 3
+      }
     ],
-    "totalDistanceM": 80,
-    "loadDistanceKgM": 249,
-    "fullPathNodeIds": [1, 11, 9, 7, 3, 8, 10, 12, 2]
+    "totalDistanceM": 50,
+    "loadDistanceKgM": 90,
+    "fullPathNodeIds": [1, 9, 2]
   },
   "sShape": {
     "stops": [
-      {"nodeId": 9, "productId": 3, "quantity": 2, "distanceFromPreviousM": 20, "carriedWeightAfterKg": 3},
-      {"nodeId": 7, "productId": 1, "quantity": 5, "distanceFromPreviousM": 10, "carriedWeightAfterKg": 3.75},
-      {"nodeId": 8, "productId": 2, "quantity": 3, "distanceFromPreviousM": 20, "carriedWeightAfterKg": 4.8},
-      {"nodeId": 2, "productId": null, "quantity": 0, "distanceFromPreviousM": 30, "carriedWeightAfterKg": 4.8}
+      {
+        "nodeId": 9,
+        "productId": 3,
+        "quantity": 2,
+        "distanceFromPreviousM": 20,
+        "carriedWeightAfterKg": 3
+      },
+      {
+        "nodeId": 2,
+        "productId": null,
+        "quantity": 0,
+        "distanceFromPreviousM": 30,
+        "carriedWeightAfterKg": 3
+      }
     ],
-    "totalDistanceM": 80,
-    "loadDistanceKgM": 249,
-    "fullPathNodeIds": [1, 11, 9, 7, 3, 8, 10, 12, 2]
+    "totalDistanceM": 50,
+    "loadDistanceKgM": 90,
+    "fullPathNodeIds": [1, 9, 2]
   }
 }
 ```
 
-### Response data models
+**Illustrative shape only:** the numeric route values and paths above are not a recorded test result. Use the actual calculation output for performance conclusions.
 
-- `RouteComparison`: `taskId` (long), `warehouseId` (long), `optimized` (`RouteResult`), `sShape` (`RouteResult`).
-- `RouteResult`: `stops` (ordered `RouteStop[]`), `totalDistanceM` (number, meters), `loadDistanceKgM` (number, kg·m), `fullPathNodeIds` (long[], including traversed intermediate nodes).
-- `RouteStop`: `nodeId` (long), `productId` (long or `null` on exit), `quantity` (int; `0` on exit), `distanceFromPreviousM` (number, meters), `carriedWeightAfterKg` (number, kg).
+| Field | Meaning |
+|---|---|
+| `taskId` | Requested picking task |
+| `warehouseId` | Warehouse containing the task |
+| `optimized`, `sShape` | Results from the two strategies |
+| `stops[]` | Ordered collection stops and final exit |
+| `totalDistanceM` | Total walking distance (m) |
+| `loadDistanceKgM` | Accumulated distance × carried load (kg·m) |
+| `fullPathNodeIds[]` | Graph node IDs, including intermediate nodes |
+| `distanceFromPreviousM` | Travel distance from preceding stop (m) |
+| `carriedWeightAfterKg` | Load after the current collection (kg) |
 
-The `optimized` strategy scores candidate locations as shortest-path distance plus 0.1 times the item weight in kilograms. This is a heuristic, not a guarantee of a globally shortest or minimum-effort route. `sShape` orders picks by coordinate-based aisles; it is a baseline approximation. Neither can be assumed to outperform the other on every scenario.
+The optimized method uses a greedy score of shortest-path distance plus `0.1 ×` candidate item weight. Shortest paths are calculated on the warehouse graph. The S-shape approach is a coordinate/aisle-based baseline. The optimized method is a **heuristic**, not a guaranteed global optimum.
 
-Possible responses: `200` routes generated; `400` invalid route/path input; `401` unauthenticated; `403` role denied; `404` task missing; `409` warehouse missing entrance/exit, no items, no remaining products or insufficient stock. Certain unexpected database faults can still produce `500`.
+Possible errors: `403` when a picker does not own the task; `404` for an unknown task; `409` for cancelled/unavailable task state, missing entrance or exit, no items to pick, or insufficient stock; `400` for invalid or unreachable path conditions. Authentication failures return `401`.
 
-## Common API error model
+**Persistence:** Neither algorithm's result is saved by this endpoint. The database includes `picking_routes` and `route_stops` tables for potential future persistence.
 
-The backend's `GlobalExceptionHandler` returns a JSON object for its handled business/validation errors:
+## 8. Error responses
+
+Application-level errors handled by `GlobalExceptionHandler` use fields such as:
 
 ```json
 {
-  "timestamp": "2026-11-23T00:04:58+02:00",
+  "timestamp": "2026-11-23T18:00:00Z",
   "status": 404,
   "error": "Not Found",
   "message": "Picking task not found: 999999999",
-  "path": "/api/routes/calculate/999999999"
+  "path": "/api/tasks/999999999"
 }
 ```
 
-Validation errors may additionally include `fieldErrors`:
+Bean Validation failures can additionally include `fieldErrors`:
 
 ```json
 {
-  "timestamp": "2026-11-23T00:04:58+02:00",
+  "timestamp": "2026-11-23T18:00:00Z",
   "status": 400,
   "error": "Bad Request",
   "message": "Request validation failed",
-  "path": "/api/warehouses",
-  "fieldErrors": {"name": "Warehouse name is required"}
+  "path": "/api/users",
+  "fieldErrors": {
+    "username": "must match the required pattern"
+  }
 }
 ```
 
-The `ApiError` OpenAPI schema currently documents five common fields; validation failures can include an additional `fieldErrors` object, which should be added to the schema to make it fully descriptive. Spring Security's `401`/`403` responses may have **empty bodies** and are not necessarily formatted by `GlobalExceptionHandler`. Framework-generated errors outside the current handler may use a different body.
+The `fieldErrors` messages vary with the constraint and input. **Security filter `401` and `403` responses may have empty bodies**. Some framework-generated validation and `ResponseStatusException` responses may differ from the application-level JSON error format.
 
-## Status code overview
-
-| HTTP | Meaning | Typical source |
+| Code | Meaning | Examples |
 |---|---|---|
-| `200` | OK | GET, PUT, successful route calculation |
-| `201` | Created | POST warehouse |
-| `204` | No Content | DELETE warehouse |
-| `400` | Bad Request | Invalid input or route/path argument |
-| `401` | Unauthorized | No or invalid credentials |
-| `403` | Forbidden | Authenticated user with wrong role |
-| `404` | Not Found | Missing warehouse or picking task |
-| `409` | Conflict | Invalid business state during route calculation |
-| `500` | Internal Server Error | Unhandled technical/database failure (not a normal business response) |
+| `200` | Successful read, update, or calculation | GET, PUT, task transitions |
+| `201` | Created | Warehouse, user, task, map import |
+| `204` | Deleted | Warehouse deletion |
+| `400` | Bad Request | Bean Validation, duplicate products, malformed graph |
+| `401` | Unauthorized | Missing/invalid Basic credentials |
+| `403` | Forbidden | Wrong role or unauthorized task ownership |
+| `404` | Not Found | Unknown warehouse, task, user, or item |
+| `409` | Conflict | Duplicate username, insufficient stock, invalid task state, repeated map import |
+| `500` | Internal Server Error | Unhandled technical/database problem; not a normal business outcome |
 
-### Persistence note
+OpenAPI response definitions describe supported or expected statuses. They are not a guarantee that all error responses share one serialized JSON schema.
 
-The last stop of the HTTP response uses `productId: null` and `quantity: 0`. The SQL `route_stops` table instead requires `quantity IS NULL` whenever `product_id IS NULL`. This does not affect the current calculation-only endpoint, but must be handled explicitly when route persistence is implemented.
+## 9. Reproducibility and maintenance
 
-## Specification maintenance
+The authoritative API contract is generated by springdoc-openapi from the running Spring Boot application. After changing controllers, DTOs, validation, or OpenAPI annotations, re-export the specification **from the repository root**:
 
-The authoritative running API description is generated from Java controllers, validation constraints, and OpenAPI annotations. After changes, export the YAML again to [`openapi.yaml`](openapi.yaml), run a linter and commit the updated specification with the code. A Markdown example alone does **not** guarantee that Swagger UI shows a concrete example; examples should also be included in OpenAPI annotations or the reviewed specification if required.
+```powershell
+Invoke-WebRequest -Uri "http://localhost:8080/v3/api-docs.yaml" -OutFile "docs/api/openapi.yaml"
+
+npx --yes @redocly/cli@latest lint docs/api/openapi.yaml
+```
+
+See [Getting Started](GETTING_STARTED.md), [Integration Tutorial](INTEGRATION_TUTORIAL.md), and [Database Setup](../database/DATABASE_SETUP.md). All examples in this document are explanatory unless expressly identified as a measured result.

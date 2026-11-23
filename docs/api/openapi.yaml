@@ -1,20 +1,32 @@
 openapi: 3.1.0
 info:
   title: Warehouse Picker Route Optimization API
-  description: "REST API for warehouse management, picking tasks and weight-aware\
-    \ route optimization."
+  description: "REST API for warehouse management, user accounts, warehouse graph\
+    \ layouts, picking tasks, product availability and weight-aware route optimization."
+  license:
+    name: All rights reserved
+    identifier: LicenseRef-Proprietary
   version: 1.0.0
 servers:
-- url: http://localhost:8080
-  description: Generated server url
+- url: /
+  description: Current application server
 security:
 - basicAuth: []
 tags:
+- name: Picking Tasks
+  description: "Create, assign and process picking tasks"
 - name: Warehouse Management
   description: "Create, retrieve, update and delete warehouses. Requires the MANAGER\
     \ role."
+- name: Authentication
+  description: Authentication and current user information.
+- name: Warehouse Maps
+  description: Import and retrieve warehouse graph layouts.
 - name: Route Optimization
   description: Calculation and comparison of warehouse picking routes
+- name: User Management
+  description: Manage application users and picker accounts. Requires the MANAGER
+    role.
 paths:
   /api/warehouses/{id}:
     get:
@@ -207,6 +219,297 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/WarehouseDTO"
+  /api/warehouses/{warehouseId}/map/import:
+    post:
+      tags:
+      - Warehouse Maps
+      summary: Import a warehouse map
+      description: Imports a validated map into an empty warehouse. Requires the MANAGER
+        role.
+      operationId: importMap
+      parameters:
+      - name: warehouseId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WarehouseMapDTO"
+        required: true
+      responses:
+        "201":
+          description: Map imported successfully
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/WarehouseMapDTO"
+        "400":
+          description: Invalid map
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/WarehouseMapDTO"
+        "401":
+          description: Authentication required
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/WarehouseMapDTO"
+        "403":
+          description: Manager role required
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/WarehouseMapDTO"
+        "404":
+          description: Warehouse not found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/WarehouseMapDTO"
+        "409":
+          description: Warehouse already contains a map
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/WarehouseMapDTO"
+  /api/users:
+    get:
+      tags:
+      - User Management
+      summary: List all users
+      description: Returns registered application users without exposing password
+        hashes. Requires the MANAGER role.
+      operationId: getAllUsers
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserResponse"
+        "401":
+          description: Authentication is required or credentials are invalid.
+        "403":
+          description: The authenticated user does not have permission to perform
+            this operation.
+    post:
+      tags:
+      - User Management
+      summary: Create a user account
+      description: "Creates a MANAGER or PICKER account. Validates the username, full\
+        \ name, password and role. Requires the MANAGER role."
+      operationId: createUser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserRequest"
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "401":
+          description: Authentication is required or credentials are invalid.
+        "403":
+          description: The authenticated user does not have permission to perform
+            this operation.
+  /api/tasks:
+    get:
+      tags:
+      - Picking Tasks
+      summary: List all tasks (MANAGER)
+      operationId: getAll
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TaskResponse"
+        "401":
+          description: Authentication is required or credentials are invalid.
+        "403":
+          description: The authenticated user does not have permission to perform
+            this operation.
+    post:
+      tags:
+      - Picking Tasks
+      summary: Create and assign a task (MANAGER)
+      operationId: create
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRequest"
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/TaskResponse"
+        "401":
+          description: Authentication is required or credentials are invalid.
+        "403":
+          description: The authenticated user does not have permission to perform
+            this operation.
+  /api/tasks/{id}/start:
+    post:
+      tags:
+      - Picking Tasks
+      summary: Start my assigned task (PICKER)
+      operationId: start
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/TaskResponse"
+        "401":
+          description: Authentication is required or credentials are invalid.
+        "403":
+          description: The authenticated user does not have permission to perform
+            this operation.
+  /api/tasks/{id}/items/{itemId}/collect:
+    post:
+      tags:
+      - Picking Tasks
+      summary: Mark collected product quantity (PICKER)
+      operationId: collect
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: itemId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CollectRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/TaskResponse"
+        "401":
+          description: Authentication is required or credentials are invalid.
+        "403":
+          description: The authenticated user does not have permission to perform
+            this operation.
+  /api/tasks/{id}/complete:
+    post:
+      tags:
+      - Picking Tasks
+      summary: Complete picking task (PICKER)
+      operationId: complete
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/TaskResponse"
+        "401":
+          description: Authentication is required or credentials are invalid.
+        "403":
+          description: The authenticated user does not have permission to perform
+            this operation.
+  /api/tasks/{id}/cancel:
+    post:
+      tags:
+      - Picking Tasks
+      summary: Cancel picking task (MANAGER)
+      operationId: cancel
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/TaskResponse"
+        "401":
+          description: Authentication is required or credentials are invalid.
+        "403":
+          description: The authenticated user does not have permission to perform
+            this operation.
+  /api/tasks/{id}/assign:
+    post:
+      tags:
+      - Picking Tasks
+      summary: Assign or reassign a task (MANAGER)
+      operationId: assign
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssignRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/TaskResponse"
+        "401":
+          description: Authentication is required or credentials are invalid.
+        "403":
+          description: The authenticated user does not have permission to perform
+            this operation.
   /api/routes/calculate/{taskId}:
     post:
       tags:
@@ -231,12 +534,10 @@ paths:
       parameters:
       - name: taskId
         in: path
-        description: Identifier of an existing picking task
         required: true
         schema:
           type: integer
           format: int64
-        example: 1
       responses:
         "200":
           description: Both routes calculated successfully
@@ -275,6 +576,138 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiError"
+  /api/warehouses/{warehouseId}/map:
+    get:
+      tags:
+      - Warehouse Maps
+      summary: Get a warehouse map
+      description: Returns the stored nodes and edges as JSON. Requires the MANAGER
+        role.
+      operationId: getMap
+      parameters:
+      - name: warehouseId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: Warehouse map retrieved
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/WarehouseMapDTO"
+        "401":
+          description: Authentication required
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/WarehouseMapDTO"
+        "403":
+          description: Manager role required
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/WarehouseMapDTO"
+        "404":
+          description: Warehouse not found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/WarehouseMapDTO"
+  /api/tasks/{id}:
+    get:
+      tags:
+      - Picking Tasks
+      summary: Get task details
+      operationId: getById
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/TaskResponse"
+        "401":
+          description: Authentication is required or credentials are invalid.
+        "403":
+          description: The authenticated user does not have permission to perform
+            this operation.
+  /api/tasks/my:
+    get:
+      tags:
+      - Picking Tasks
+      summary: List my assigned tasks (PICKER)
+      operationId: getMine
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TaskResponse"
+        "401":
+          description: Authentication is required or credentials are invalid.
+        "403":
+          description: The authenticated user does not have permission to perform
+            this operation.
+  /api/catalog/products:
+    get:
+      tags:
+      - Product Catalog
+      summary: List available products in a warehouse (MANAGER)
+      operationId: getProducts
+      parameters:
+      - name: warehouseId
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProductOption"
+        "401":
+          description: Authentication is required or credentials are invalid.
+        "403":
+          description: The authenticated user does not have permission to perform
+            this operation.
+  /api/auth/me:
+    get:
+      tags:
+      - Authentication
+      summary: Get current authenticated user
+      description: Returns the username and application role of the authenticated
+        user. Requires HTTP Basic authentication.
+      operationId: getCurrentUser
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/CurrentUser"
+        "401":
+          description: Authentication is required or credentials are invalid.
+        "403":
+          description: The authenticated user does not have permission to perform
+            this operation.
 components:
   schemas:
     WarehouseDTO:
@@ -308,6 +741,207 @@ components:
           type: string
         path:
           type: string
+    EdgeDTO:
+      type: object
+      properties:
+        from:
+          type: string
+          minLength: 1
+        to:
+          type: string
+          minLength: 1
+        distanceM:
+          type: number
+          minimum: 0.01
+        bidirectional:
+          type: boolean
+      required:
+      - bidirectional
+      - distanceM
+      - from
+      - to
+    NodeDTO:
+      type: object
+      properties:
+        code:
+          type: string
+          minLength: 1
+          pattern: "[A-Za-z0-9_-]{1,50}"
+        type:
+          type: string
+          enum:
+          - ENTRANCE
+          - EXIT
+          - INTERSECTION
+          - STORAGE
+        x:
+          type: number
+        "y":
+          type: number
+      required:
+      - code
+      - type
+      - x
+      - "y"
+    WarehouseMapDTO:
+      type: object
+      properties:
+        nodes:
+          type: array
+          items:
+            $ref: "#/components/schemas/NodeDTO"
+          maxItems: 1000
+          minItems: 3
+        edges:
+          type: array
+          items:
+            $ref: "#/components/schemas/EdgeDTO"
+          maxItems: 5000
+          minItems: 1
+      required:
+      - edges
+      - nodes
+    CreateUserRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 1
+          pattern: "[A-Za-z0-9._-]{3,100}"
+        fullName:
+          type: string
+          maxLength: 150
+          minLength: 0
+        password:
+          type: string
+          maxLength: 72
+          minLength: 12
+        role:
+          type: string
+          enum:
+          - MANAGER
+          - PICKER
+      required:
+      - fullName
+      - password
+      - role
+      - username
+    UserResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        username:
+          type: string
+        fullName:
+          type: string
+        role:
+          type: string
+        active:
+          type: boolean
+    CreateRequest:
+      type: object
+      properties:
+        warehouseId:
+          type: integer
+          format: int64
+          exclusiveMinimum: 0
+        pickerId:
+          type: integer
+          format: int64
+          exclusiveMinimum: 0
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ItemRequest"
+          minItems: 1
+      required:
+      - items
+      - pickerId
+      - warehouseId
+    ItemRequest:
+      type: object
+      properties:
+        productId:
+          type: integer
+          format: int64
+          exclusiveMinimum: 0
+        quantity:
+          type: integer
+          format: int32
+          exclusiveMinimum: 0
+      required:
+      - productId
+      - quantity
+    ItemResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        productId:
+          type: integer
+          format: int64
+        sku:
+          type: string
+        productName:
+          type: string
+        requiredQuantity:
+          type: integer
+          format: int32
+        collectedQuantity:
+          type: integer
+          format: int32
+    TaskResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        warehouseId:
+          type: integer
+          format: int64
+        warehouseName:
+          type: string
+        assignedPickerId:
+          type: integer
+          format: int64
+        assignedPickerUsername:
+          type: string
+        status:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        startedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ItemResponse"
+    CollectRequest:
+      type: object
+      properties:
+        quantity:
+          type: integer
+          format: int32
+          exclusiveMinimum: 0
+      required:
+      - quantity
+    AssignRequest:
+      type: object
+      properties:
+        pickerId:
+          type: integer
+          format: int64
+          exclusiveMinimum: 0
+      required:
+      - pickerId
     RouteComparison:
       type: object
       properties:
@@ -353,6 +987,28 @@ components:
           type: number
         carriedWeightAfterKg:
           type: number
+    ProductOption:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        sku:
+          type: string
+        name:
+          type: string
+        weightKg:
+          type: number
+        availableQuantity:
+          type: integer
+          format: int32
+    CurrentUser:
+      type: object
+      properties:
+        username:
+          type: string
+        role:
+          type: string
   securitySchemes:
     basicAuth:
       type: http

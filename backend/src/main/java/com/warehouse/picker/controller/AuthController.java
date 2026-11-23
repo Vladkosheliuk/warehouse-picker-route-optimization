@@ -1,6 +1,9 @@
 
 package com.warehouse.picker.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,9 +13,17 @@ import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/auth")
+@Tag(
+        name = "Authentication",
+        description = "Authentication and current user information."
+)
 public class AuthController {
 
     @GetMapping("/me")
+    @Operation(
+            summary = "Get current authenticated user",
+            description = "Returns the username and application role of the authenticated user. Requires HTTP Basic authentication."
+    )
     public CurrentUser getCurrentUser(Authentication authentication) {
 
         boolean isManager = authentication.getAuthorities()
