@@ -1,4 +1,3 @@
-
 package com.warehouse.picker;
 
 import org.junit.jupiter.api.Test;

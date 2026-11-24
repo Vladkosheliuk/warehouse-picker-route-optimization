@@ -1,4 +1,3 @@
-
 # API Integration Tutorial — Warehouse Picker Route Optimization Platform
 
 This tutorial shows how to exercise the local REST API from Windows PowerShell with `curl.exe`. It covers authentication, warehouse creation, map import, user and product lookup, picking-task creation, route comparison, authorization checks, and error handling.

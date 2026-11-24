@@ -1,4 +1,3 @@
-
 # PickerRoute — Warehouse Picking Frontend
 
 **A role-based warehouse operations interface for assigning picking tasks, exploring warehouse layouts, and comparing collection routes.**
@@ -7,7 +6,11 @@ Built as the frontend of the **Warehouse Picker Route Optimization Platform**, a
 
 **React 19** · **TypeScript 7** · **Vite 8** · **Spring Boot REST API** · **Vitest** · **Playwright**
 
-> **Project status:** The application and automated tests run locally. A public deployment URL is not available yet. GitHub Actions results should be checked after the latest frontend code and workflow are pushed.
+> **Project status:** The React frontend, component tests,
+> and Playwright end-to-end scenarios have been verified locally.
+> The application supports a unified Maven build that packages
+> the React frontend and Spring Boot backend into one executable
+> JAR. Public deployment has not yet been performed.
 
 ## Contents
 
@@ -114,7 +117,7 @@ The application is a **Single Page Application (SPA)**. Page navigation and the 
 ```mermaid
 flowchart TB
     U[Warehouse user]
-    subgraph FE[Frontend — React SPA]
+    subgraph FE[Frontend - React SPA]
         LOGIN[Login page]
         APP[App: role-aware navigation]
         PAGES[Pages: Tasks, Planner, Warehouses, Users, Maps]
@@ -184,7 +187,8 @@ warehouse-picker-route-optimization/
 │   └── package.json
 ├── .github/workflows/
 │   ├── backend-tests.yml
-│   └── frontend-ci.yml             # Add and push for frontend CI
+│   ├── frontend-ci.yml
+│   └── playwright-e2e.yml
 └── README.md
 ```
 
@@ -208,7 +212,7 @@ This stack keeps the frontend small and transparent: no additional routing or gl
 
 ### Prerequisites
 
-- **Node.js 22.12+** and npm (compatible with Vite 8).
+- **Node.js 22.23.5** and npm (compatible with Vite 8).
 - **Java 21** and the running Spring Boot backend at `http://localhost:8080`.
 - PostgreSQL configured for the backend; test manager and picker accounts created.
 
@@ -242,6 +246,40 @@ npm run build
 ```
 
 The output is written to `frontend/dist/`. A successful build verifies TypeScript and Vite compilation; publishing the bundle requires a separate deployment step.
+
+### Unified Fullstack Build
+
+In addition to separate frontend development, the platform
+supports a unified Maven build.
+
+From the repository root on Windows:
+
+```powershell
+cd backend
+.\mvnw.cmd -Pfullstack clean verify
+```
+
+The Maven profile automatically installs a compatible Node.js
+version, installs frontend dependencies, builds the React
+application, and packages the resulting static assets into
+the Spring Boot executable JAR.
+
+With the required database environment variables configured,
+start the application from the backend directory:
+
+```powershell
+java -jar target\backend-0.0.1-SNAPSHOT.jar
+```
+
+Open http://localhost:8080/ to access the React interface.
+
+The API is available under `/api/**` on the same server.
+
+A separate Vite development server is not needed when using
+the unified executable JAR.
+
+The existing `npm run dev` command remains available for
+frontend development.
 
 ## Forms, loading and error handling
 
@@ -316,7 +354,15 @@ Build:       npm run build succeeded
 
 ## Continuous integration
 
-The intended frontend workflow is **`.github/workflows/frontend-ci.yml`**. Once added and pushed to GitHub, it runs `npm ci`, `npm run test`, and `npm run build` and publishes the Vite output as a build artifact.
+The frontend continuous integration workflow is configured
+in `.github/workflows/frontend-ci.yml`.
+
+It runs automatically for pushes and pull requests that
+affect frontend files, and it can also be started manually.
+
+The workflow executes `npm ci`, `npm run test`, and
+`npm run build`, then uploads the production frontend
+artifact.
 
 ```mermaid
 flowchart LR
@@ -328,7 +374,22 @@ flowchart LR
     F --> G[Upload build artifact]
 ```
 
-**CI status:** Local tests and build have been verified; the Frontend CI workflow has **not yet been verified as successful on GitHub**. The two browser E2E tests are currently run locally because they need a live test backend, database, and accounts.
+**CI status:** The frontend workflow is published in
+GitHub Actions. It verifies component tests and the
+production build.
+
+The two Playwright E2E scenarios have been verified locally.
+
+A separate workflow, `.github/workflows/playwright-e2e.yml`,
+is configured to run browser tests with a temporary
+PostgreSQL database and Spring Boot backend.
+
+Successful execution of the new workflow in GitHub Actions
+has not yet been verified.
+
+The unified fullstack Maven build has also been verified
+locally, including 93 passing backend tests and the
+JaCoCo coverage quality gate.
 
 [View repository Actions](https://github.com/Vladkosheliuk/warehouse-picker-route-optimization/actions)
 

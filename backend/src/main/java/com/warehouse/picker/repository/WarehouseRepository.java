@@ -1,4 +1,3 @@
-
 package com.warehouse.picker.repository;
 
 import com.warehouse.picker.entity.Warehouse;

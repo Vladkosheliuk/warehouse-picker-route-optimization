@@ -188,8 +188,37 @@ The `app_read` database role cannot access the
 credentials through the restricted `warehouse_app`
 database account.
 
-Password hashing and application-level authorization
-will be implemented using Spring Security.
+Password hashing and application-level authorization are
+implemented using Spring Security.
+
+User passwords are encoded with BCrypt before being stored
+in the database.
+
+The application supports HTTP Basic authentication with
+two roles: `MANAGER` and `PICKER`.
+
+Authorization is enforced by Spring Security and
+backend service-level permission checks.
+
+### Initial Manager Account
+
+The application does not allow public self-registration
+because it is intended for internal warehouse operations.
+
+During initial setup, the administrator may configure
+the initial manager through environment variables.
+
+If no MANAGER account exists, the backend creates
+the first manager using the configured credentials.
+
+The account is stored in the `users` table with the
+`MANAGER` role and a BCrypt-encoded password.
+
+Once authenticated, the manager can create additional
+MANAGER and PICKER accounts through the user management API.
+
+The initial manager creation is skipped when the
+database already contains a MANAGER account.
 
 ## 8. Table: `picking_tasks`
 
@@ -274,7 +303,7 @@ Each product can appear only once in a particular picking task.
 
 **Allowed algorithms:**
 - `S_SHAPE` — traditional S-shape baseline
-- `OPTIMIZED` — planned weight-aware optimization algorithm
+- `OPTIMIZED` — implemented weight-aware route optimization heuristic
 
 **Check constraints:**
 - `total_distance_m >= 0`
@@ -284,6 +313,19 @@ Each product can appear only once in a particular picking task.
 The load-distance metric represents the accumulated carried weight multiplied by travel distance across route segments.
 
 Multiple route records can be associated with one task, allowing comparison between algorithms.
+
+The database schema supports the persistence of picking
+routes and their performance metrics.
+
+The current REST API calculates picking routes and returns
+the results directly to the client without automatically
+persisting new route records.
+
+The demonstration dataset contains predefined route
+records and ordered route stops for database testing.
+
+The implemented weight-aware algorithm is a heuristic
+and does not guarantee a globally optimal solution.
 
 ## 11. Table: `route_stops`
 
@@ -397,21 +439,67 @@ The application schema is created by the following migration sequence:
 
 This ensures that the database structure can be reproduced from version-controlled SQL files.
 
+
 ## 15. Design Notes and Limitations
 
-The database structure provides the foundation for the planned application.
+The PostgreSQL database schema is implemented through
+five versioned Flyway migrations.
 
-Some business rules will require application-level validation in addition to database constraints. For example:
+The application uses the database to manage warehouses,
+warehouse graphs, product locations, user accounts,
+picking tasks, and collection progress.
 
-- Ensuring that a task creator has the `MANAGER` role.
-- Ensuring that an assigned picker has the `PICKER` role.
-- Checking that route stops belong to the warehouse associated with their task.
-- Validating stock availability before confirming product collection.
-- Ensuring route results are consistent with the selected warehouse graph.
+### Implemented Business Validation
 
-These rules are not fully enforced by the current SQL constraints.
+The backend implements application-level validation
+for operations that cannot be enforced by SQL
+constraints alone.
 
-The database schema is implemented, while the complete application functionality remains under development.
+Examples include:
+
+- Role-based authorization for MANAGER and PICKER accounts.
+- Verification of the assigned picker during task operations.
+- Validation of picking task state transitions.
+- Validation of available stock when creating picking tasks.
+- Prevention of collected quantities exceeding required quantities.
+- Validation of warehouse graphs used for route calculation.
+
+Spring Security handles authentication and authorization,
+while Spring service methods enforce business rules.
+
+### Current Limitations
+
+The following features are not implemented in the
+current application:
+
+- Automatic reservation or deduction of inventory stock
+  when picking items are collected.
+- Automatic persistence of newly calculated routes
+  into the `picking_routes` and `route_stops` tables.
+- Historical analysis of calculated picking routes.
+
+The database schema supports storing picking routes,
+but the current route calculation API returns results
+without saving them.
+
+Collected quantities are recorded in `picking_task_items`.
+They do not automatically update inventory quantities
+in `product_locations`.
+
+These limitations are documented to distinguish the
+implemented functionality from possible future extensions.
+
+### Data Integrity
+
+Primary keys, foreign keys, unique constraints,
+CHECK constraints, and NOT NULL constraints enforce
+structural data integrity.
+
+Application-level validation complements these database
+constraints for business rules involving multiple entities.
+
+Transactional service methods help maintain consistency
+during picking task operations.
 
 ## 16. Data Quality and Integrity Verification
 

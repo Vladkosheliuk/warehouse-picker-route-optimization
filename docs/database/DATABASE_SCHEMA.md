@@ -61,7 +61,7 @@ Products and warehouse nodes have a many-to-many relationship implemented throug
 
 The combination of `product_id` and `node_id` is unique, preventing duplicate stock records for the same product at the same location.
 
-Product weight is used as an input for the planned weight-aware route optimization algorithm.
+Product weight is used as an input for the implemented weight-aware route optimization heuristic.
 
 ## 5. Users and Picking Tasks
 
@@ -94,7 +94,7 @@ A task can have multiple routes, allowing different routing strategies to be com
 The database supports two algorithm identifiers:
 
 - `S_SHAPE` — baseline picking strategy.
-- `OPTIMIZED` — planned weight-aware optimization strategy.
+- `OPTIMIZED` — implemented weight-aware route optimization heuristic.
 
 The following metrics are stored for each route:
 
@@ -111,6 +111,13 @@ Each stop records its sequence number, distance from the previous stop, and carr
 Product and quantity fields are optional because a route may include navigation stops where no products are collected.
 
 The combination of `route_id` and `stop_order` is unique.
+
+The route tables are implemented in the database schema
+and can contain predefined demonstration records.
+
+However, the current route calculation API does not
+automatically persist newly calculated routes.
+The calculated results are returned directly to the client.
 
 ## 7. Table Relationships
 
@@ -231,17 +238,31 @@ Transactions follow the ACID principles:
 
 ### Transaction Scenarios
 
-| Operation | Transaction scope |
-|---|---|
-| Create picking task | Create the task and all required task items within one transaction. |
-| Assign picking task | Update the assigned picker and task status together. |
-| Confirm product collection | Update the collected quantity and reduce the available stock within one transaction. |
-| Save picking route | Store the route calculation results and all associated route stops together. |
-| Complete picking task | Update the task status and completion timestamp after validating collected quantities. |
+| Operation | Transaction scope | Implementation |
+|---|---|---|
+| Create picking task | Create the task and its required items within one transaction. | Implemented |
+| Assign picking task | Update the assigned picker and task status. | Implemented |
+| Confirm product collection | Update the collected quantity of a task item. | Implemented |
+| Complete picking task | Validate collected quantities and update the task status and completion timestamp. | Implemented |
+| Deduct inventory stock | Reduce available inventory when products are collected. | Not implemented |
+| Persist calculated routes | Store calculated route results and ordered route stops. | Not implemented |
+
+The current picking workflow records collected quantities
+but does not automatically deduct warehouse stock.
+
+Route calculation results are returned by the REST API
+without automatically saving them to the database.
+
+The database schema supports route persistence, and the
+demonstration dataset includes example stored routes.
 
 ### Transaction Handling
 
-Application-level transactions will be managed using Spring's `@Transactional` annotation in the service layer.
+Application-level transactions are managed using Spring's
+`@Transactional` annotation in the service layer.
+
+Picking task creation, assignment, collection updates,
+completion, and cancellation use transactional service methods.
 
 If an operation fails, the transaction will be rolled back to prevent partially saved or inconsistent data.
 
@@ -285,7 +306,8 @@ Application-level roles are stored in the `users` table:
 - `MANAGER` — manages warehouse information, creates picker accounts, and assigns picking tasks.
 - `PICKER` — performs assigned picking tasks and records collected products.
 
-Application roles are independent of PostgreSQL roles. Their business permissions will be enforced by the Spring Security application layer.
+Application roles are independent of PostgreSQL roles.
+Their permissions are enforced by Spring Security and backend service-level authorization checks.
 
 ### Password Protection
 

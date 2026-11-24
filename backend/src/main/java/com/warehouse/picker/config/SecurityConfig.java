@@ -1,4 +1,3 @@
-
 package com.warehouse.picker.config;
 
 import org.springframework.context.annotation.Bean;
@@ -34,6 +33,10 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
+                                "/",
+                                "/index.html",
+                                "/assets/**",
+                                "/favicon.svg",
                                 "/actuator/health",
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",

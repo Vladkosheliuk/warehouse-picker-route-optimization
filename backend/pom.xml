@@ -177,4 +177,90 @@
         </plugins>
     </build>
 
+
+    <profiles>
+        <profile>
+            <id>fullstack</id>
+
+            <build>
+                <plugins>
+
+                    <!-- Build React frontend automatically -->
+                    <plugin>
+                        <groupId>com.github.eirslett</groupId>
+                        <artifactId>frontend-maven-plugin</artifactId>
+                        <version>2.0.2</version>
+
+                        <configuration>
+                            <workingDirectory>${project.basedir}/../frontend</workingDirectory>
+                            <installDirectory>${project.basedir}/../.frontend-toolchain</installDirectory>
+                            <nodeVersion>v22.23.5</nodeVersion>
+                        </configuration>
+
+                        <executions>
+                            <execution>
+                                <id>install-node</id>
+                                <phase>generate-resources</phase>
+                                <goals>
+                                    <goal>install-node-and-npm</goal>
+                                </goals>
+                            </execution>
+
+                            <execution>
+                                <id>install-frontend-dependencies</id>
+                                <phase>generate-resources</phase>
+                                <goals>
+                                    <goal>npm</goal>
+                                </goals>
+                                <configuration>
+                                    <arguments>ci</arguments>
+                                </configuration>
+                            </execution>
+
+                            <execution>
+                                <id>build-react</id>
+                                <phase>generate-resources</phase>
+                                <goals>
+                                    <goal>npm</goal>
+                                </goals>
+                                <configuration>
+                                    <arguments>run build</arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- Include React build in Spring Boot JAR -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-resources-plugin</artifactId>
+
+                        <executions>
+                            <execution>
+                                <id>include-react</id>
+                                <phase>process-resources</phase>
+
+                                <goals>
+                                    <goal>copy-resources</goal>
+                                </goals>
+
+                                <configuration>
+                                    <outputDirectory>${project.build.outputDirectory}/static</outputDirectory>
+
+                                    <resources>
+                                        <resource>
+                                            <directory>${project.basedir}/../frontend/dist</directory>
+                                            <filtering>false</filtering>
+                                        </resource>
+                                    </resources>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
 </project>

@@ -1,4 +1,3 @@
-
 # Front-End Assessment — Implementation and Evidence
 
 ## 1. Project Information
@@ -168,7 +167,7 @@ The backend validates domain-specific operations such as authorization, inventor
 
 The interface provides loading indicators, disabled controls, and error messages during asynchronous operations.
 
-The React Error Boundary is intended to provide a fallback screen for unexpected rendering errors and must be mounted in the application entry point.
+The React Error Boundary is mounted around the application in `frontend/src/main.tsx` and provides a fallback interface when an unexpected React rendering error occurs.
 
 ## 9. Automated Test Evidence
 
@@ -261,7 +260,25 @@ The workflow performs:
 5. TypeScript and production build verification.
 6. Production artifact upload.
 
-The workflow must be published and its result verified through GitHub Actions.
+The frontend CI workflow is published on GitHub and
+previously completed successfully.
+
+It runs the seven Vitest component tests, validates the
+TypeScript and Vite production build, and uploads the
+frontend build artifact.
+
+The latest local documentation and fullstack changes
+have not yet been pushed or verified by GitHub Actions.
+
+Playwright end-to-end testing is configured separately in
+`.github/workflows/playwright-e2e.yml`.
+
+The workflow starts a temporary PostgreSQL database and
+Spring Boot backend before running the two Chromium scenarios.
+
+The Playwright workflow has not yet been verified through
+a successful GitHub Actions execution.
+
 
 ## 12. Security
 
@@ -284,6 +301,7 @@ The Front-end criterion submission consists of:
 | Architecture and user flows | `frontend/README.md` |
 | Component tests | `frontend/src/test/` |
 | E2E tests | `frontend/e2e/` |
+| Playwright E2E workflow | `.github/workflows/playwright-e2e.yml` |
 | Testing documentation | `docs/frontend/TESTING.md` |
 | Criterion documentation | `docs/frontend/FRONTEND_CRITERION.md` |
 | GitHub Actions workflow | `.github/workflows/frontend-ci.yml` |
@@ -305,7 +323,7 @@ No public frontend deployment URL is provided at this stage.
 | Form validation and error states | Implemented; final integration check required |
 | Component tests | 7/7 passed |
 | E2E tests | 2/2 passed |
-| GitHub Actions | Pending remote verification |
+| GitHub Actions | Previously verified; latest local changes pending publication |
 | Repository publication | Latest local changes must be pushed |
 
 ---

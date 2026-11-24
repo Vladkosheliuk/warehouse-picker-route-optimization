@@ -16,7 +16,15 @@ The following tools are required:
 - PostgreSQL database or Supabase project
 - Docker Desktop (optional, for local database deployment)
 
-The project uses PostgreSQL hosted on Supabase as its development database. A local PostgreSQL instance can also be deployed using Docker Compose.
+The application uses PostgreSQL 17 as its relational
+database management system.
+
+The development database is hosted on Supabase.
+A local PostgreSQL instance can also be configured
+using Docker Compose.
+
+Database schema versioning and migrations are managed
+using Flyway.
 
 ## 2. Clone the Repository
 
@@ -44,8 +52,17 @@ Configure the following environment variables in the IntelliJ IDEA Run/Debug Con
 | Variable | Description |
 |---|---|
 | `DB_URL` | PostgreSQL JDBC connection URL |
-| `DB_USERNAME` | Database application username |
-| `DB_PASSWORD` | Database application password |
+| `DB_USERNAME` | Application database username |
+| `DB_PASSWORD` | Application database password |
+| `FLYWAY_USERNAME` | Database account with schema migration permissions |
+| `FLYWAY_PASSWORD` | Password for the migration account |
+| `INITIAL_MANAGER_USERNAME` | Optional initial manager login |
+| `INITIAL_MANAGER_PASSWORD` | Optional initial manager password, minimum 12 characters |
+| `INITIAL_MANAGER_FULL_NAME` | Optional initial manager display name |
+
+These variables can be configured through IntelliJ IDEA
+Run/Debug Configurations or through the environment of
+the Java process.
 
 Example JDBC URL:
 
@@ -158,6 +175,41 @@ Execute the scripts using the database administrator after applying the schema m
 
 The application account password must be configured separately using a secure, locally supplied value.
 
+### Local Database Initialization
+
+For a new local PostgreSQL database, the setup sequence is:
+
+1. Start PostgreSQL using Docker Compose.
+2. Configure the database owner credentials for Flyway.
+3. Start the backend to apply Flyway migrations V1-V5.
+4. Stop the backend after the schema is initialized.
+5. Execute `01_create_roles.sql` using the database owner.
+6. Execute `02_grant_permissions.sql`.
+7. Execute `04_create_application_user.sql`.
+8. Set a password for the `warehouse_app` database account.
+9. Execute `03_verify_permissions.sql` to inspect access rights.
+10. Configure the application to connect as `warehouse_app`
+    while retaining the database owner as the Flyway user.
+
+The SQL security scripts must be executed using a
+PostgreSQL account with sufficient administrative privileges.
+
+The `04_create_application_user.sql` script creates the
+database login role but deliberately does not embed a
+password in source control.
+
+The password should be assigned securely using an
+interactive PostgreSQL administration tool, such as
+the psql `\password warehouse_app` command.
+
+The restricted application account is used for normal
+application queries. Flyway uses an account with
+the permissions required to manage schema migrations.
+
+On an existing database, do not repeat role creation
+or import demonstration data without checking the
+current state first.
+
 ### Access Restrictions
 
 - `app_read` can read application data but cannot insert, update, or delete records.
@@ -207,6 +259,41 @@ The demonstration dataset includes:
 The example routes are predefined demonstration data and do not represent measured results from the final Java optimization algorithm.
 
 The seed script should be executed on an empty application dataset. It should not be executed repeatedly against an already populated database.
+
+### Initial Manager and Demo Accounts
+
+The system is intended for internal warehouse operations
+and does not provide public user self-registration.
+
+The initial manager can be created automatically during
+the first application startup.
+
+To enable this behavior, configure:
+
+- `INITIAL_MANAGER_USERNAME`
+- `INITIAL_MANAGER_PASSWORD`
+- `INITIAL_MANAGER_FULL_NAME`
+
+All three variables must be provided. The initial manager
+is created only if no MANAGER account exists in the database.
+
+The manager account uses BCrypt password hashing.
+
+After authentication, the manager can create additional
+MANAGER and PICKER accounts through the application.
+
+The demonstration seed script also creates sample accounts,
+including a manager.
+
+If the demonstration data is imported first, the initial
+manager bootstrap is skipped because a manager already exists.
+
+To initialize a manager with custom credentials, start the
+application with the required environment variables before
+importing the demonstration dataset.
+
+Sample account password hashes in the seed dataset are
+not replaced automatically by the initial-manager variables.
 
 ## 7. Database Testing
 
@@ -269,25 +356,85 @@ The permission tests verify:
 
 All six permission checks were successfully verified against the Supabase development database.
 
-## 8. Running the Backend
+## 8. Running the Application
 
-After the database schema, security roles, and test data have been configured:
+The application supports both backend development mode
+and a unified fullstack build.
 
-1. Open the `backend` module in IntelliJ IDEA.
-2. Select Java 21.
-3. Configure the database environment variables.
-4. Configure Flyway to use separate migration credentials or disable automatic migration execution for normal application startup.
-5. Run `BackendApplication`.
+### Backend Development Mode
 
-Main application class:
+Configure the required database environment variables
+and run `BackendApplication` through IntelliJ IDEA.
 
-```text
-com.warehouse.picker.BackendApplication
+Alternatively, from the repository root on Windows:
+
+```powershell
+cd backend
+.\mvnw.cmd spring-boot:run
 ```
 
-The backend uses port `8080`.
+The REST API is available at:
 
-The backend database connection was verified using the dedicated `warehouse_app` account. PostgreSQL activity monitoring confirmed JDBC connections established under this restricted account.
+http://localhost:8080/api/
+
+### Unified Fullstack Build
+
+The fullstack Maven profile builds the React frontend
+and Spring Boot backend into a single executable JAR.
+
+From the repository root:
+
+```powershell
+cd backend
+.\mvnw.cmd -Pfullstack clean verify
+```
+
+The build automatically installs the required Node.js
+version, installs frontend dependencies, builds React,
+runs backend tests, checks JaCoCo coverage, and packages
+the complete application.
+
+Docker Desktop is required for Testcontainers-based
+integration tests during the verification phase.
+
+After a successful build, execute:
+
+```powershell
+java -jar target\backend-0.0.1-SNAPSHOT.jar
+```
+
+The database environment variables must be available
+to the Java process before startup.
+
+Open:
+
+http://localhost:8080/
+
+The React frontend and Spring Boot API are served by
+the same application on port 8080.
+
+No separate Vite development server is required.
+
+### Verification
+
+Check application health:
+
+```powershell
+curl.exe -i http://localhost:8080/actuator/health
+```
+
+A healthy application returns HTTP 200.
+
+Use the configured manager credentials to authenticate
+through the React login interface.
+
+Database connection settings and initial manager credentials
+are supplied through environment variables and are not
+embedded in the executable JAR.
+
+The application was previously verified against a
+Supabase PostgreSQL database using a restricted
+`warehouse_app` account.
 
 ## 9. Related Documentation
 

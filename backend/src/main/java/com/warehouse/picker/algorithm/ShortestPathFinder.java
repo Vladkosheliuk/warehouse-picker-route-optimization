@@ -1,4 +1,3 @@
-
 package com.warehouse.picker.algorithm;
 
 import com.warehouse.picker.entity.WarehouseEdge;

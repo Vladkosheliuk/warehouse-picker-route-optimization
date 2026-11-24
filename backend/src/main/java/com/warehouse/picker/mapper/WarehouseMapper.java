@@ -1,6 +1,5 @@
 package com.warehouse.picker.mapper;
 
-
 import com.warehouse.picker.dto.WarehouseDTO;
 import com.warehouse.picker.entity.Warehouse;
 import org.springframework.stereotype.Component;

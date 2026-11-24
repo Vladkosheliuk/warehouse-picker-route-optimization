@@ -1,4 +1,3 @@
-
 package com.warehouse.picker.config;
 
 import com.warehouse.picker.entity.User;

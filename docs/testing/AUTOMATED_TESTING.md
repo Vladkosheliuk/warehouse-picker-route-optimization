@@ -1,4 +1,3 @@
-
 # Automated Testing and Coverage
 
 ## 1. Overview
@@ -228,6 +227,45 @@ To execute a specific test class:
 
 A successful isolated test execution does not replace the full `clean verify` coverage verification.
 
+### Fullstack Build Verification
+
+The project supports a unified Maven build that packages
+the React frontend and Spring Boot backend into one
+executable JAR.
+
+The build is executed from the repository root:
+
+```powershell
+cd backend
+.\mvnw.cmd -Pfullstack clean verify
+```
+
+The fullstack build performs:
+
+- Frontend dependency installation.
+- React production compilation using Vite.
+- Backend compilation and packaging.
+- Automated backend test execution.
+- JaCoCo coverage verification.
+
+The generated React assets are included in the
+Spring Boot executable JAR.
+
+The fullstack build was verified locally on
+November 24, 2026.
+
+Verification results:
+
+- React production build successful.
+- All 93 backend tests passed.
+- JaCoCo coverage thresholds satisfied.
+- Frontend assets successfully packaged into the JAR.
+- Maven BUILD SUCCESS.
+
+The standard backend CI workflow runs without the
+fullstack Maven profile. Frontend tests and production
+compilation are verified by the separate Frontend CI workflow.
+
 ## 8. Frontend Testing
 
 Frontend testing is organized into component tests and browser-based end-to-end tests.
@@ -268,7 +306,8 @@ npm run test:e2e
 
 These tests require a running backend, a configured database, suitable test data, and dedicated manager/picker credentials.
 
-Playwright E2E tests have been verified locally. They are not yet included in the GitHub Actions workflow.
+Playwright E2E tests have been verified locally.
+A dedicated GitHub Actions workflow is configured to execute them against an isolated PostgreSQL database.
 
 Detailed frontend testing instructions are available in:
 
@@ -276,7 +315,8 @@ Detailed frontend testing instructions are available in:
 
 ## 9. Continuous Integration
 
-The repository contains separate workflows for backend and frontend verification.
+The repository contains separate GitHub Actions workflows for backend tests, frontend component tests, and Playwright
+end-to-end testing.
 
 ### 9.1 Backend CI
 
@@ -348,7 +388,30 @@ npm run build
 
 It verifies frontend dependencies, component tests, TypeScript compilation, and the production Vite build.
 
-Playwright E2E execution is not currently part of this workflow.
+Playwright E2E tests are configured in a separate
+GitHub Actions workflow: `.github/workflows/playwright-e2e.yml`.
+
+### 9.4 Playwright E2E CI
+
+Workflow: `.github/workflows/playwright-e2e.yml`
+
+The workflow runs browser-based tests against a
+temporary PostgreSQL 17 database.
+
+Flyway initializes the database schema, followed by
+demonstration data and temporary test accounts.
+
+Spring Boot and the React development server are started
+automatically before Playwright executes the Chromium tests.
+
+The test environment does not depend on the development
+Supabase database.
+
+Browser test reports and failure artifacts are uploaded
+to GitHub Actions.
+
+The workflow must complete successfully in GitHub Actions
+before CI execution is considered verified.
 
 ## 10. Test Isolation and Reproducibility
 
@@ -380,10 +443,12 @@ No production credentials are required for backend automated tests.
 - GitHub Actions backend workflow passed.
 - Seven frontend component tests passed locally.
 - Two Playwright E2E scenarios passed locally.
+- Unified React and Spring Boot build verified locally.
+- Executable JAR packaging completed successfully.
 
 ### Current Limitations
 
-- Playwright E2E tests are not yet executed in CI.
+- The dedicated Playwright E2E workflow requires verification through a successful GitHub Actions run.
 - Coverage percentages may change when application code is modified.
 - The JaCoCo quality gate applies to the backend bundle, rather than imposing individual minimums on every package.
 - Passing tests do not guarantee the absence of defects.

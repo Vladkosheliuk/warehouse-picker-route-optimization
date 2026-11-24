@@ -1,4 +1,3 @@
-
 package com.warehouse.picker.controller;
 
 import com.warehouse.picker.dto.CreateUserRequest;

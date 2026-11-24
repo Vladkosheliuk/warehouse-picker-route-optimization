@@ -1,4 +1,3 @@
-
 package com.warehouse.picker.service;
 
 import com.warehouse.picker.dto.PickingTaskDto.*;
@@ -10,6 +9,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -24,6 +25,8 @@ public class PickingTaskService {
     private final UserRepository users;
     private final ProductRepository products;
     private final ProductLocationRepository locations;
+    private static final Logger log =
+            LoggerFactory.getLogger(PickingTaskService.class);
 
     public PickingTaskService(
             PickingTaskRepository tasks,
@@ -278,6 +281,13 @@ public class PickingTaskService {
 
         taskItems.saveAllAndFlush(items);
 
+        log.atInfo()
+                .addKeyValue("event", "picking_task_created")
+                .addKeyValue("task_id", task.getId())
+                .addKeyValue("warehouse_id", warehouse.getId())
+                .addKeyValue("picker_id", picker.getId())
+                .log("Picking task created");
+
         return toResponse(task);
     }
 
@@ -362,6 +372,11 @@ public class PickingTaskService {
 
         task.setStatus("IN_PROGRESS");
         task.setStartedAt(OffsetDateTime.now());
+        log.atInfo()
+                .addKeyValue("event", "picking_task_started")
+                .addKeyValue("task_id", task.getId())
+                .addKeyValue("picker_id", picker.getId())
+                .log("Picking task started");
 
         return toResponse(task);
     }
@@ -444,6 +459,11 @@ public class PickingTaskService {
 
         task.setStatus("COMPLETED");
         task.setCompletedAt(OffsetDateTime.now());
+        log.atInfo()
+                .addKeyValue("event", "picking_task_completed")
+                .addKeyValue("task_id", task.getId())
+                .addKeyValue("picker_id", picker.getId())
+                .log("Picking task completed");
 
         return toResponse(task);
     }
@@ -465,6 +485,10 @@ public class PickingTaskService {
         }
 
         task.setStatus("CANCELLED");
+        log.atInfo()
+                .addKeyValue("event", "picking_task_cancelled")
+                .addKeyValue("task_id", task.getId())
+                .log("Picking task cancelled");
 
         return toResponse(task);
     }

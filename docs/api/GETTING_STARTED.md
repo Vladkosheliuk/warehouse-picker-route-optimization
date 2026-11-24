@@ -1,4 +1,3 @@
-
 # Getting Started — Warehouse Picker Route Optimization API
 
 ## Overview
@@ -65,21 +64,99 @@ docker compose ps
 
 Do not assume that a fresh database contains products or picking tasks; initialize demonstration data separately as described in the database setup guide.
 
-## 3. Start the backend
+## 3. Start the Application
 
-With the required environment variables configured, run `BackendApplication` in IntelliJ IDEA, or execute from the repository root:
+The platform supports separate backend development and
+a unified fullstack execution mode.
+
+### 3.1 Unified Fullstack Build
+
+From the repository root on Windows:
 
 ```powershell
 cd backend
+.\mvnw.cmd -Pfullstack clean verify
+```
 
+The Maven fullstack profile automatically installs Node.js,
+installs frontend dependencies, builds the React application,
+and packages the frontend into the Spring Boot JAR.
+
+The build also runs backend automated tests and verifies
+the JaCoCo coverage thresholds.
+
+Docker Desktop must be running for Testcontainers-based
+integration tests.
+
+### 3.2 Run the Executable JAR
+
+After a successful fullstack build, execute from `backend/`:
+
+```powershell
+java -jar target\backend-0.0.1-SNAPSHOT.jar
+```
+
+The required database environment variables must be
+available to the Java process.
+
+Application URL:
+
+http://localhost:8080/
+
+The React interface and REST API are served by the same
+Spring Boot application on port 8080.
+
+The executable JAR contains the frontend and backend,
+but does not contain database credentials.
+
+### 3.3 Backend Development Mode
+
+The Java backend can also be started independently.
+
+From the repository root:
+
+```powershell
+cd backend
 .\mvnw.cmd spring-boot:run
 ```
 
-The application runs at `http://localhost:8080` unless configured otherwise.
+Alternatively, run `BackendApplication` in IntelliJ IDEA
+with the required environment variables configured.
 
-Flyway manages schema migrations; Hibernate validates the resulting schema.
+The backend API runs at:
 
-If using IntelliJ, verify that the selected JDK is Java 21 and that the backend's run configuration contains the database credentials.
+http://localhost:8080
+
+A separate React development server can be started using
+`npm run dev` inside the `frontend/` directory.
+
+### 3.4 Database and Initial Manager
+
+The application supports local and hosted PostgreSQL
+databases configured through environment variables.
+
+Flyway applies the versioned database migrations.
+
+The initial manager is created automatically when all
+three INITIAL_MANAGER environment variables are provided
+and no MANAGER account already exists in the database.
+
+The administrator can then create additional users through
+the authenticated application interface.
+
+Demonstration data can be imported using
+`database/seed/01_seed_test_data.sql`.
+
+The demonstration dataset includes sample manager and
+picker accounts. Because a manager already exists after
+importing this dataset, the initial-manager bootstrap
+will not create another manager.
+
+For a new manager account with custom credentials, use
+a fresh database before importing the demonstration data.
+
+See [Database Setup](../database/DATABASE_SETUP.md)
+for detailed database configuration and security instructions.
 
 ## 4. Check service health and authentication
 
@@ -200,6 +277,8 @@ Update the Java DTOs, controllers, and OpenAPI configuration, restart the backen
 | `/v3/api-docs.yaml` unavailable | Confirm the backend is running and the endpoint is permitted by Spring Security |
 | Empty product catalog | Load seed data or choose a warehouse with positive product stock |
 | Route calculation fails | Check task ownership, task state, entrance/exit, connectivity, product locations, and stock |
+| Application fails with `${FLYWAY_USERNAME}` authentication error | Define `FLYWAY_USERNAME` and `FLYWAY_PASSWORD` in the environment of the Java process |
+| Root URL returns 404 instead of the React interface | Build with `-Pfullstack` and start the resulting JAR; a backend-only development build may not contain React assets |
 
 ## 10. Related documentation
 

@@ -1,4 +1,3 @@
-
 package com.warehouse.picker.security;
 
 import com.warehouse.picker.entity.User;

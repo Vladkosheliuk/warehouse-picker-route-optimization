@@ -1,4 +1,3 @@
-
 export interface RouteStop {
     nodeId: number;
     productId: number | null;

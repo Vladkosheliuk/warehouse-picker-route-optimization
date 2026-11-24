@@ -1,4 +1,3 @@
-
 interface Props {
     username: string;
     onWarehouses: () => void;

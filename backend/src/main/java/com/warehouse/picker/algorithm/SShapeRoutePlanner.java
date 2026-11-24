@@ -1,4 +1,3 @@
-
 package com.warehouse.picker.algorithm;
 
 import com.warehouse.picker.entity.WarehouseEdge;
@@ -7,7 +6,6 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Component
 public class SShapeRoutePlanner {

@@ -1,4 +1,3 @@
-
 # Warehouse Picker Route Optimization API — Reference
 
 - **API version:** 1.0.0
@@ -6,7 +5,7 @@
 - **Local base URL:** `http://localhost:8080`
 - **Authentication:** HTTP Basic
 - **Interactive documentation:** [Swagger UI](http://localhost:8080/swagger-ui/index.html)
-**Machine-readable contract:** [openapi.yaml](openapi.yaml)
+- **Machine-readable contract:** [openapi.yaml](openapi.yaml)
 
 ## Overview
 
@@ -467,3 +466,154 @@ npx --yes @redocly/cli@latest lint docs/api/openapi.yaml
 ```
 
 See [Getting Started](GETTING_STARTED.md), [Integration Tutorial](INTEGRATION_TUTORIAL.md), and [Database Setup](../database/DATABASE_SETUP.md). All examples in this document are explanatory unless expressly identified as a measured result.
+
+
+## 10. Request and Response Examples for All Endpoints
+
+The following table provides examples for all 21 REST API operations.
+
+Base URL: `http://localhost:8080`
+
+Authentication: HTTP Basic. All requests require a valid username and password.
+
+For compactness, response examples show representative fields. Complete JSON response models are documented in Sections 1–8 and in [OpenAPI Specification](openapi.yaml). IDs are illustrative.
+
+### 10.1 Authentication
+
+| Method | Endpoint | Request Example | Response Example | Errors |
+|---|---|---|---|---|
+| GET | `/api/auth/me` | No body | `200 {"username":"manager","role":"MANAGER"}` | 401, 403 |
+
+### 10.2 Warehouse Management
+
+| Method | Endpoint | Request Example | Response Example | Errors |
+|---|---|---|---|---|
+| GET | `/api/warehouses` | No body | `200 [{"id":1,"name":"Demo Warehouse","description":"Test warehouse"}]` | 401, 403 |
+| GET | `/api/warehouses/1` | No body | `200 {"id":1,"name":"Demo Warehouse","description":"Test warehouse"}` | 401, 403, 404 |
+| POST | `/api/warehouses` | `{"name":"New Warehouse","description":"Test"}` | `201 {"id":2,"name":"New Warehouse","description":"Test"}` | 400, 401, 403 |
+| PUT | `/api/warehouses/2` | `{"name":"Updated Warehouse","description":"Updated"}` | `200 {"id":2,"name":"Updated Warehouse","description":"Updated"}` | 400, 401, 403, 404 |
+| DELETE | `/api/warehouses/2` | No body | `204 No Content` | 401, 403, 404, 500 |
+
+Warehouse deletion may fail when dependent database records exist.
+
+### 10.3 Warehouse Maps
+
+| Method | Endpoint | Request Example | Response Example | Errors |
+|---|---|---|---|---|
+| GET | `/api/warehouses/1/map` | No body | `200 {"nodes":[],"edges":[]}` for an empty map | 401, 403, 404 |
+| POST | `/api/warehouses/2/map/import` | `WarehouseMapDTO` from Section 3 | `201 WarehouseMapDTO` containing imported nodes and edges | 400, 401, 403, 404, 409 |
+
+Example map import request:
+
+```json
+{
+  "nodes": [
+    {"code":"ENTRY","type":"ENTRANCE","x":0,"y":0},
+    {"code":"S01","type":"STORAGE","x":10,"y":0},
+    {"code":"EXIT","type":"EXIT","x":20,"y":0}
+  ],
+  "edges": [
+    {"from":"ENTRY","to":"S01","distanceM":10,"bidirectional":true},
+    {"from":"S01","to":"EXIT","distanceM":10,"bidirectional":true}
+  ]
+}
+```
+
+The successful import response returns the same graph structure with HTTP 201.
+
+### 10.4 User Management
+
+| Method | Endpoint | Request Example | Response Example | Errors |
+|---|---|---|---|---|
+| GET | `/api/users` | No body | `200 [{"id":3,"username":"picker1","fullName":"Test Picker","role":"PICKER","active":true}]` | 401, 403 |
+| POST | `/api/users` | `{"username":"picker1","fullName":"Test Picker","password":"ExamplePassword123!","role":"PICKER"}` | `201 {"id":3,"username":"picker1","fullName":"Test Picker","role":"PICKER","active":true}` | 400, 401, 403, 409 |
+
+Passwords are stored as BCrypt hashes and are never returned in API responses. The example password is illustrative and must not be used for real accounts.
+
+### 10.5 Product Catalog
+
+| Method | Endpoint | Request Example | Response Example | Errors |
+|---|---|---|---|---|
+| GET | `/api/catalog/products?warehouseId=1` | Query parameter `warehouseId=1` | `200 [{"id":1,"sku":"DEMO-001","name":"LED Light Bulb","weightKg":0.15,"availableQuantity":100}]` | 400, 401, 403, 404 |
+
+### 10.6 Picking Tasks
+
+The examples below use a representative task with ID `5`, warehouse ID `1`, assigned picker ID `3`, and item ID `11`.
+
+All successful task operations return a `TaskResponse` containing task details, timestamps and item information. Section 6 provides the complete response example.
+
+| Method | Endpoint | Request Example | Response Example (selected fields) | Errors |
+|---|---|---|---|---|
+| GET | `/api/tasks` | No body | `200 [{"id":5,"status":"ASSIGNED"}]` | 401, 403 |
+| GET | `/api/tasks/my` | No body | `200 [{"id":5,"assignedPickerId":3,"status":"ASSIGNED"}]` | 401, 403 |
+| GET | `/api/tasks/5` | No body | `200 {"id":5,"status":"ASSIGNED"}` | 401, 403, 404 |
+| POST | `/api/tasks` | `{"warehouseId":1,"pickerId":3,"items":[{"productId":1,"quantity":2}]}` | `201 {"id":5,"status":"ASSIGNED"}` | 400, 401, 403, 404, 409 |
+| POST | `/api/tasks/5/assign` | `{"pickerId":3}` | `200 {"id":5,"assignedPickerId":3,"status":"ASSIGNED"}` | 400, 401, 403, 404, 409 |
+| POST | `/api/tasks/5/start` | No body | `200 {"id":5,"status":"IN_PROGRESS"}` | 401, 403, 404, 409 |
+| POST | `/api/tasks/5/items/11/collect` | `{"quantity":1}` | `200 {"id":5,"items":[{"id":11,"collectedQuantity":1}]}` | 400, 401, 403, 404, 409 |
+| POST | `/api/tasks/5/complete` | No body | `200 {"id":5,"status":"COMPLETED"}` | 401, 403, 404, 409 |
+| POST | `/api/tasks/5/cancel` | No body | `200 {"id":5,"status":"CANCELLED"}` | 401, 403, 404, 409 |
+
+The start, collect, and complete examples describe successive changes to the same task. Completing a task requires all requested quantities to be collected first. Cancelling a task is a separate scenario and cannot be performed after completion.
+
+### 10.7 Route Calculation
+
+| Method | Endpoint | Request Example | Response Example (selected fields) | Errors |
+|---|---|---|---|---|
+| POST | `/api/routes/calculate/5` | No body | `200 {"taskId":5,"warehouseId":1,"optimized":{"totalDistanceM":50},"sShape":{"totalDistanceM":60}}` | 400, 401, 403, 404, 409 |
+
+The full `RouteComparison` response is documented in Section 7. It contains ordered stops, total walking distance, load-distance, and graph paths for both algorithms.
+
+The example metrics are illustrative, not actual measured results. Route calculations are returned without automatically persisting new route records.
+
+### 10.8 Error Response Examples
+
+Typical application-level error:
+
+```json
+{
+  "timestamp": "2026-11-24T12:00:00Z",
+  "status": 404,
+  "error": "Not Found",
+  "message": "Picking task not found: 999",
+  "path": "/api/tasks/999"
+}
+```
+
+Validation error example:
+
+```json
+{
+  "timestamp": "2026-11-24T12:00:00Z",
+  "status": 400,
+  "error": "Bad Request",
+  "message": "Request validation failed",
+  "path": "/api/users",
+  "fieldErrors": {
+    "username": "must match the required pattern"
+  }
+}
+```
+
+Common HTTP status codes:
+
+- `200 OK` — successful request.
+- `201 Created` — resource successfully created.
+- `204 No Content` — successful deletion.
+- `400 Bad Request` — invalid request data.
+- `401 Unauthorized` — missing or invalid authentication.
+- `403 Forbidden` — insufficient permissions.
+- `404 Not Found` — requested resource does not exist.
+- `409 Conflict` — business rule or state conflict.
+- `500 Internal Server Error` — unhandled server error.
+
+Authentication and authorization failures may return empty response bodies. Not all errors use the same JSON schema.
+
+### 10.9 Additional API Resources
+
+- [OpenAPI 3.1 Specification](openapi.yaml) — complete schemas, parameters and response definitions.
+- [Integration Tutorial](INTEGRATION_TUTORIAL.md) — executable step-by-step HTTP requests.
+- [Getting Started](GETTING_STARTED.md) — application setup and authentication.
+- Swagger UI: `http://localhost:8080/swagger-ui/index.html`
+
+All 21 API operations are listed above, with representative request and response examples. The OpenAPI specification remains the authoritative source for complete response schemas.

@@ -1,4 +1,3 @@
-
 package com.warehouse.picker.exception;
 
 import jakarta.servlet.http.HttpServletRequest;

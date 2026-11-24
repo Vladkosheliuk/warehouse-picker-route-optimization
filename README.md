@@ -1,4 +1,3 @@
-
 # Warehouse Picker Route Optimization Platform
 
 **A warehouse management and order-picking platform with graph-based route planning, inventory location tracking, and performance comparison of picking strategies.**
@@ -463,16 +462,22 @@ When the backend is running:
 - [Integration Tutorial](docs/api/INTEGRATION_TUTORIAL.md)
 - [API Request Examples](docs/api/examples/)
 
-The checked-in OpenAPI document must be regenerated and validated against the current backend before final submission.
+The OpenAPI 3.1 specification was exported from the
+running backend and validated with Redocly CLI,
+with zero errors and zero warnings.
+
+The specification should be regenerated and revalidated
+whenever controllers, DTOs, or API annotations change.
 
 ## 14. Project Structure
-
+│       └──
 ```text
 warehouse-picker-route-optimization/
 ├── .github/
 │   └── workflows/
 │       ├── backend-tests.yml
-│       └── frontend-ci.yml
+│       ├── frontend-ci.yml
+│       └── playwright-e2e.yml
 ├── backend/
 │   ├── src/main/java/
 │   ├── src/main/resources/
@@ -497,56 +502,152 @@ warehouse-picker-route-optimization/
 ├── docs/
 │   ├── api/
 │   ├── database/
-│   └── frontend/
+│   ├── frontend/
+│   └── testing/
 └── README.md
 ```
 
 ## 15. Getting Started
 
+The Warehouse Picker Route Optimization Platform supports
+both development mode and a unified fullstack build.
+
+The fullstack build packages the React frontend and Spring
+Boot backend into a single executable JAR.
+
 ### Prerequisites
 
 - Java Development Kit 21.
-- Node.js compatible with Vite 8.
-- npm.
-- PostgreSQL 17 or a compatible PostgreSQL instance.
 - Git.
-- Docker Desktop for Docker-based database setup and Testcontainers integration tests.
+- PostgreSQL 17 or a compatible PostgreSQL database.
+- Docker Desktop for local PostgreSQL and Testcontainers tests.
+- Node.js and npm for separate frontend development.
 
-### Backend Configuration
+The fullstack Maven profile automatically installs its own
+compatible Node.js version.
 
-Configure the database connection through environment variables.
+### Database Configuration
+
+The application requires a PostgreSQL database.
+
+Database connection settings are supplied using environment
+variables:
 
 | Variable | Purpose |
 |---|---|
 | `DB_URL` | PostgreSQL JDBC URL |
-| `DB_USERNAME` | Application database username |
-| `DB_PASSWORD` | Application database password |
-| `FLYWAY_USERNAME` | Migration account username |
-| `FLYWAY_PASSWORD` | Migration account password |
-| `INITIAL_MANAGER_USERNAME` | Optional initial manager username |
-| `INITIAL_MANAGER_PASSWORD` | Optional initial manager password |
-| `INITIAL_MANAGER_FULL_NAME` | Optional initial manager display name |
+| `DB_USERNAME` | Database application account |
+| `DB_PASSWORD` | Database application password |
+| `FLYWAY_USERNAME` | Database migration account |
+| `FLYWAY_PASSWORD` | Database migration password |
 
-See [Database Setup](docs/database/DATABASE_SETUP.md) and [Backend Getting Started](docs/api/GETTING_STARTED.md) for complete configuration instructions.
+The application supports both local PostgreSQL databases
+and hosted PostgreSQL instances.
 
-### Start Backend
+Database passwords must never be committed to GitHub.
 
-From the repository root:
+See [Database Setup](docs/database/DATABASE_SETUP.md)
+for detailed instructions.
+
+### Initial Manager Setup
+
+The platform is designed for internal company use.
+Public user self-registration is not provided.
+
+On the first application startup, an administrator can
+configure an initial manager account using:
+
+| Variable | Purpose |
+|---|---|
+| `INITIAL_MANAGER_USERNAME` | Initial manager login |
+| `INITIAL_MANAGER_PASSWORD` | Initial manager password (minimum 12 characters) |
+| `INITIAL_MANAGER_FULL_NAME` | Manager display name |
+
+If the variables are present and no MANAGER account exists
+in the database, the backend creates the initial manager.
+
+The password is stored using BCrypt hashing.
+
+Once the initial manager exists, they can create additional
+MANAGER and PICKER accounts through the authenticated user
+management interface.
+
+The initial account is not recreated on every startup.
+Changing the environment variables does not reset an
+existing manager's password.
+
+The demonstration SQL script also contains sample manager
+and picker accounts. To create an initial manager with
+custom credentials, start the application against a fresh
+database before loading the demonstration dataset.
+
+### Fullstack Build
+
+The recommended way to build the complete application is
+to use the Maven fullstack profile.
+
+From the repository root on Windows:
+
+```powershell
+cd backend
+.\mvnw.cmd -Pfullstack clean verify
+```
+
+The fullstack profile automatically:
+
+1. Installs Node.js 22.23.5.
+2. Installs frontend dependencies using npm ci.
+3. Builds the React frontend using Vite.
+4. Copies the compiled frontend into Spring Boot resources.
+5. Compiles the Java backend.
+6. Runs automated backend tests.
+7. Verifies JaCoCo coverage thresholds.
+8. Creates a single executable Spring Boot JAR.
+
+Docker Desktop must be running for integration tests
+that use Testcontainers.
+
+After successful execution, the packaged application is:
+
+`backend/target/backend-0.0.1-SNAPSHOT.jar`
+
+### Run the Fullstack Application
+
+With the required database environment variables configured,
+execute from the backend directory:
+
+```powershell
+java -jar target\backend-0.0.1-SNAPSHOT.jar
+```
+
+Open:
+
+http://localhost:8080/
+
+The React interface and Spring Boot REST API are served
+from the same application.
+
+API endpoints remain available under `/api/**`.
+
+A separate Vite development server is not required.
+
+The executable JAR contains the frontend and backend,
+but does not contain database passwords or user credentials.
+
+### Development Mode
+
+Frontend and backend can also run separately during
+development.
+
+Start the Java backend:
 
 ```powershell
 cd backend
 .\mvnw.cmd spring-boot:run
 ```
 
-Alternatively, run the backend through IntelliJ IDEA with the required environment variables.
-
-Default API address:
-
-http://localhost:8080
-
-### Start Frontend
-
-Open a separate terminal from the repository root:
+Start the React development server in another terminal,
+from the repository root:
 
 ```powershell
 cd frontend
@@ -554,12 +655,49 @@ npm ci
 npm run dev
 ```
 
-Default frontend address:
+Development addresses:
 
-http://localhost:5173
+- Backend API: http://localhost:8080
+- Frontend Vite server: http://localhost:5173
 
-A working backend and configured database are required for authenticated operations.
+Vite forwards `/api` requests to the backend during
+local frontend development.
 
+### Reproducibility
+
+The application can be built from the repository source
+using the included Maven Wrapper.
+
+PostgreSQL connection settings and the required environment
+variables must be configured before application startup.
+
+Flyway manages database schema creation.
+
+Demonstration warehouse, product, and picking-task data
+can be loaded using:
+
+`database/seed/01_seed_test_data.sql`
+
+The seed script must be used with an appropriately
+initialized database and must not be repeatedly imported
+into an already populated dataset.
+
+### Verification
+
+The unified build was verified locally on
+November 24, 2026.
+
+Verified results:
+
+- React production build successful.
+- Frontend resources packaged in Spring Boot JAR.
+- 93 backend tests passed.
+- Zero test failures and errors.
+- JaCoCo coverage quality gate passed.
+- Application successfully opened at localhost:8080
+  using the configured IntelliJ JAR run configuration.
+
+Public deployment is pending confirmation.
 
 ## 16. Automated Testing
 
@@ -673,7 +811,13 @@ npm run test:e2e
 
 The E2E tests require a running backend, a configured database, suitable test records, and dedicated manager and picker credentials.
 
-Playwright E2E tests are not yet executed in GitHub Actions.
+Playwright E2E tests are configured in the dedicated
+`.github/workflows/playwright-e2e.yml` workflow.
+
+The workflow uses a temporary PostgreSQL 17 database
+and runs both Chromium E2E scenarios.
+
+Successful execution in GitHub Actions is pending verification.
 
 ### Testing Documentation
 
@@ -744,7 +888,11 @@ npm run build
 
 The production build is uploaded as a GitHub Actions artifact.
 
-Playwright E2E tests are currently verified locally and are not included in the frontend CI workflow.
+Playwright E2E tests run through a separate GitHub Actions
+workflow configured in `.github/workflows/playwright-e2e.yml`.
+
+The browser tests have passed locally. The new CI workflow
+has not yet been verified by a successful GitHub Actions run.
 
 ### CI Workflow Overview
 
@@ -832,6 +980,7 @@ Performance conclusions must be based on reproducible scenarios and measured out
 | General project overview | This README |
 | Frontend architecture and user flows | [Frontend README](frontend/README.md) |
 | Frontend testing | [TESTING.md](docs/frontend/TESTING.md) |
+| Automated testing and coverage | [Automated Testing](docs/testing/AUTOMATED_TESTING.md) |
 | Front-end assessment | [FRONTEND_CRITERION.md](docs/frontend/FRONTEND_CRITERION.md) |
 | API specification | [OpenAPI YAML](docs/api/openapi.yaml) |
 | API documentation | [API Reference](docs/api/API_REFERENCE.md) |

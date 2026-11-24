@@ -1,4 +1,3 @@
-
 # Frontend Testing
 
 ## 1. Overview
@@ -291,9 +290,21 @@ flowchart TD
 | Component tests | `npm run test` |
 | Production build | `npm run build` |
 
-The Playwright scenarios are executed locally because they depend on a running test backend, configured database, and test accounts.
+Playwright E2E tests are configured in the dedicated
+GitHub Actions workflow `.github/workflows/playwright-e2e.yml`.
 
-The CI workflow result must be verified in the repository's GitHub Actions page after publication.
+The workflow uses a temporary PostgreSQL 17 database,
+starts the Spring Boot backend, and executes the
+Chromium E2E scenarios.
+
+The workflow results are available in GitHub Actions
+after execution.
+
+The frontend CI workflow has been published and
+previously verified successfully on GitHub Actions.
+
+The latest unpublished changes will require a new
+CI verification after they are pushed to the repository.
 
 ## 10. Test Coverage Scope
 
@@ -322,7 +333,8 @@ The results confirm the tested behaviors; they do not represent a measured perce
 | Playwright E2E tests | 2/2 passed |
 | Browser | Chromium |
 | TypeScript and Vite build | Successful |
-| GitHub Actions | Requires verification after publishing |
+| GitHub Actions | Previously verified; latest changes not yet published |
+
 
 The implemented tests satisfy the frontend assessment requirement of testing at least three key components and providing one or two end-to-end tests.
 

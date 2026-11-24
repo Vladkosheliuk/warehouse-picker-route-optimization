@@ -1,4 +1,3 @@
-
 package com.warehouse.picker.dto;
 
 import jakarta.validation.constraints.NotBlank;
