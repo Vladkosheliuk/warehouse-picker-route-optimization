@@ -410,8 +410,7 @@ Supabase database.
 Browser test reports and failure artifacts are uploaded
 to GitHub Actions.
 
-The workflow must complete successfully in GitHub Actions
-before CI execution is considered verified.
+The Playwright E2E workflow completed successfully in GitHub Actions.
 
 ## 10. Test Isolation and Reproducibility
 
@@ -445,11 +444,12 @@ No production credentials are required for backend automated tests.
 - Two Playwright E2E scenarios passed locally.
 - Unified React and Spring Boot build verified locally.
 - Executable JAR packaging completed successfully.
+- Playwright E2E GitHub Actions workflow passed successfully.
+- Backend Tests, Frontend CI, and Playwright E2E passed
+  on November 24, 2026.
 
 ### Current Limitations
 
-- Playwright E2E GitHub Actions workflow passed successfully.
-- Backend Tests, Frontend CI, and Playwright E2E passed for commit `cd9eb4e` on November 24, 2026.
 - Coverage percentages may change when application code is modified.
 - The JaCoCo quality gate applies to the backend bundle, rather than imposing individual minimums on every package.
 - Passing tests do not guarantee the absence of defects.
