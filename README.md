@@ -817,7 +817,7 @@ Playwright E2E tests are configured in the dedicated
 The workflow uses a temporary PostgreSQL 17 database
 and runs both Chromium E2E scenarios.
 
-Successful execution in GitHub Actions is pending verification.
+The Playwright E2E workflow completed successfully in GitHub Actions.
 
 ### Testing Documentation
 
@@ -891,8 +891,7 @@ The production build is uploaded as a GitHub Actions artifact.
 Playwright E2E tests run through a separate GitHub Actions
 workflow configured in `.github/workflows/playwright-e2e.yml`.
 
-The browser tests have passed locally. The new CI workflow
-has not yet been verified by a successful GitHub Actions run.
+The Playwright E2E workflow has also been successfully verified on GitHub Actions.
 
 ### CI Workflow Overview
 

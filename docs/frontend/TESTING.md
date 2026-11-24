@@ -303,8 +303,17 @@ after execution.
 The frontend CI workflow has been published and
 previously verified successfully on GitHub Actions.
 
-The latest unpublished changes will require a new
-CI verification after they are pushed to the repository.
+### Verified CI Results
+
+On November 24, 2026, all three GitHub Actions workflows
+completed successfully for commit `cd9eb4e`:
+
+- Backend Tests — passed.
+- Frontend CI — passed.
+- Playwright E2E — passed.
+
+The Playwright workflow uses an isolated PostgreSQL 17
+database and executes both Chromium E2E scenarios.
 
 ## 10. Test Coverage Scope
 

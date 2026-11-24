@@ -267,18 +267,17 @@ It runs the seven Vitest component tests, validates the
 TypeScript and Vite production build, and uploads the
 frontend build artifact.
 
-The latest local documentation and fullstack changes
-have not yet been pushed or verified by GitHub Actions.
+### Verified CI Results
 
-Playwright end-to-end testing is configured separately in
-`.github/workflows/playwright-e2e.yml`.
+On November 24, 2026, all three GitHub Actions workflows
+completed successfully for commit `cd9eb4e`:
 
-The workflow starts a temporary PostgreSQL database and
-Spring Boot backend before running the two Chromium scenarios.
+- Backend Tests — passed.
+- Frontend CI — passed.
+- Playwright E2E — passed.
 
-The Playwright workflow has not yet been verified through
-a successful GitHub Actions execution.
-
+The Playwright E2E workflow runs both Chromium scenarios
+using an isolated PostgreSQL test database.
 
 ## 12. Security
 
@@ -323,7 +322,7 @@ No public frontend deployment URL is provided at this stage.
 | Form validation and error states | Implemented; final integration check required |
 | Component tests | 7/7 passed |
 | E2E tests | 2/2 passed |
-| GitHub Actions | Previously verified; latest local changes pending publication |
+| GitHub Actions | All three workflows passed for commit `cd9eb4e` |
 | Repository publication | Latest local changes must be pushed |
 
 ---

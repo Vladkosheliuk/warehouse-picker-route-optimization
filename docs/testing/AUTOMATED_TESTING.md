@@ -448,7 +448,8 @@ No production credentials are required for backend automated tests.
 
 ### Current Limitations
 
-- The dedicated Playwright E2E workflow requires verification through a successful GitHub Actions run.
+- Playwright E2E GitHub Actions workflow passed successfully.
+- Backend Tests, Frontend CI, and Playwright E2E passed for commit `cd9eb4e` on November 24, 2026.
 - Coverage percentages may change when application code is modified.
 - The JaCoCo quality gate applies to the backend bundle, rather than imposing individual minimums on every package.
 - Passing tests do not guarantee the absence of defects.

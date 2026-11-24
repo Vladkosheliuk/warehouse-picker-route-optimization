@@ -354,16 +354,6 @@ Build:       npm run build succeeded
 
 ## Continuous integration
 
-The frontend continuous integration workflow is configured
-in `.github/workflows/frontend-ci.yml`.
-
-It runs automatically for pushes and pull requests that
-affect frontend files, and it can also be started manually.
-
-The workflow executes `npm ci`, `npm run test`, and
-`npm run build`, then uploads the production frontend
-artifact.
-
 ```mermaid
 flowchart LR
     A[Push or pull request] --> B[Checkout]
@@ -374,9 +364,19 @@ flowchart LR
     F --> G[Upload build artifact]
 ```
 
-**CI status:** The frontend workflow is published in
-GitHub Actions. It verifies component tests and the
-production build.
+### Verified CI Results
+
+All three GitHub Actions workflows completed successfully:
+
+- Backend Tests — passed.
+- Frontend CI — passed.
+- Playwright E2E — passed.
+
+The Frontend CI workflow verifies the seven Vitest tests
+and the production Vite build.
+
+The Playwright E2E workflow uses an isolated PostgreSQL
+database to execute the manager and picker browser scenarios.
 
 The two Playwright E2E scenarios have been verified locally.
 
