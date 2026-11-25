@@ -312,6 +312,12 @@ completed successfully for commit `cd9eb4e`:
 - Frontend CI — passed.
 - Playwright E2E — passed.
 
+Latest verified CI runs:
+
+- [Frontend CI](https://github.com/Vladkosheliuk/warehouse-picker-route-optimization/actions/runs/45444573211)
+- [Playwright E2E](https://github.com/Vladkosheliuk/warehouse-picker-route-optimization/actions/runs/45444573097)
+- [Backend Tests](https://github.com/Vladkosheliuk/warehouse-picker-route-optimization/actions/runs/45446623377)
+
 The Playwright workflow uses an isolated PostgreSQL 17
 database and executes both Chromium E2E scenarios.
 
@@ -332,6 +338,13 @@ The current automated frontend test suite validates:
 The component test suite contains seven passing tests, and the browser test suite contains two passing scenarios.
 
 The results confirm the tested behaviors; they do not represent a measured percentage of total frontend code coverage.
+
+The application is deployed on AWS EC2 and accessible via HTTPS.
+
+Public application: https://56.228.138.90/
+
+Automated frontend and E2E tests are executed in isolated test
+environments rather than against the production database.
 
 ## 11. Verification Summary
 

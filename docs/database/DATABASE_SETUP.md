@@ -2,7 +2,9 @@
 
 **Project:** Warehouse Picker Route Optimization Platform  
 **Database:** PostgreSQL 17  
-**Database hosting:** Supabase  
+**Database hosting:** Supabase
+**Application hosting:** AWS EC2 (Ubuntu)
+**Production application:** https://56.228.138.90/
 **Migration tool:** Flyway  
 **Backend:** Java 21, Spring Boot
 
@@ -295,6 +297,32 @@ importing the demonstration dataset.
 Sample account password hashes in the seed dataset are
 not replaced automatically by the initial-manager variables.
 
+### Production Database Configuration
+
+The application deployed on AWS EC2 connects to the
+PostgreSQL database hosted on Supabase.
+
+Database connection settings are supplied through
+environment variables:
+
+- `DB_URL`
+- `DB_USERNAME`
+- `DB_PASSWORD`
+- `FLYWAY_USERNAME`
+- `FLYWAY_PASSWORD`
+
+On the production server, these variables are stored in:
+
+`/etc/warehouse-picker.env`
+
+The configuration file is protected with restricted
+file permissions (600) and is loaded by the systemd service.
+
+Database credentials are not included in the application
+source code or the executable JAR.
+
+Flyway manages database migrations during application startup.
+
 ## 7. Database Testing
 
 Database tests are located in:
@@ -446,3 +474,14 @@ Supabase PostgreSQL database using a restricted
 - [Test Data](../../database/seed/)
 - [Database Tests](../../database/tests/)
 - [Project README](../../README.md)
+
+## Production Health Check
+
+The deployed application can be checked using:
+
+```bash
+curl -i https://56.228.138.90/actuator/health
+```
+
+The health endpoint returned HTTP 200 with status UP
+after production deployment.

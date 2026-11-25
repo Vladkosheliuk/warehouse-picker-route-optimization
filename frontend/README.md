@@ -10,7 +10,9 @@ Built as the frontend of the **Warehouse Picker Route Optimization Platform**, a
 > and Playwright end-to-end scenarios have been verified locally.
 > The application supports a unified Maven build that packages
 > the React frontend and Spring Boot backend into one executable
-> JAR. Public deployment has not yet been performed.
+> JAR. The application is deployed on AWS EC2 and is accessible via HTTPS.
+>
+> Live application: https://56.228.138.90/
 
 ## Contents
 
@@ -153,7 +155,7 @@ flowchart TB
 | Component tests | React behavior verification | `src/test/` |
 | Browser tests | Real end-to-end user workflows | `e2e/` |
 
-**Security boundary:** Hiding manager-only navigation improves usability but does not enforce permissions. The backend must independently authorize every protected API operation. The current application uses HTTP Basic authentication; use HTTPS before any public deployment.
+**Security boundary:** Hiding manager-only navigation improves usability but does not enforce permissions. The backend must independently authorize every protected API operation. The current application uses HTTP Basic authentication; the public deployment uses HTTPS.
 
 ## Project structure
 
@@ -207,6 +209,18 @@ warehouse-picker-route-optimization/
 This stack keeps the frontend small and transparent: no additional routing or global state-management library is needed for the current application scope.
 
 ---
+
+## Production Deployment
+
+The React frontend is packaged together with the Spring Boot backend in a single executable JAR deployed on AWS EC2.
+
+Nginx serves as a reverse proxy and provides HTTPS access using a Let's Encrypt certificate.
+
+The frontend and REST API use the same origin. A separate frontend server is not required in production.
+
+Public application: https://56.228.138.90/
+
+Backend health check: https://56.228.138.90/actuator/health
 
 ## Running locally
 
@@ -384,8 +398,7 @@ A separate workflow, `.github/workflows/playwright-e2e.yml`,
 is configured to run browser tests with a temporary
 PostgreSQL database and Spring Boot backend.
 
-Successful execution of the new workflow in GitHub Actions
-has not yet been verified.
+Both Playwright E2E tests passed successfully in GitHub Actions.
 
 The unified fullstack Maven build has also been verified
 locally, including 93 passing backend tests and the
@@ -398,7 +411,6 @@ JaCoCo coverage quality gate.
 - The demo warehouse initially contains a limited set of sample products. Adding arbitrary catalog products and assigning physical storage locations is a separate inventory-management workflow.
 - Route calculations use the currently available warehouse data and do **not** save a calculated route in the database.
 - The weight-aware routing method is a **heuristic**, not a proof of globally shortest or minimum-load-distance routing.
-- The public application URL is not yet available; the validated execution environment is local.
 
 ## Front-end assessment requirements
 
@@ -414,7 +426,7 @@ JaCoCo coverage quality gate.
 | 1–2 E2E tests | 2 passing Playwright tests |
 | README and run instructions | [Running locally](#running-locally) |
 | Repository access | [GitHub repository](https://github.com/Vladkosheliuk/warehouse-picker-route-optimization) |
-| Public app link | Not available yet (optional if not deployed) |
+| Public app link | https://56.228.138.90/ |
 
 ---
 

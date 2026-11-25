@@ -4,6 +4,8 @@
 
 Bachelor's project | Java 21 | Spring Boot | PostgreSQL | React | TypeScript
 
+**Live application:** [PickerRoute](https://56.228.138.90/)
+
 ## 1. Project Overview
 
 The Warehouse Picker Route Optimization Platform is a full-stack application designed to support warehouse order-picking operations and evaluate alternative collection routes.
@@ -697,7 +699,21 @@ Verified results:
 - Application successfully opened at localhost:8080
   using the configured IntelliJ JAR run configuration.
 
-Public deployment is pending confirmation.
+### Production Deployment
+
+The application is deployed on AWS EC2 (Ubuntu) as a single executable JAR containing the Spring Boot backend and React frontend.
+
+- Public application: https://56.228.138.90/
+- Database: Supabase PostgreSQL
+- Reverse proxy: Nginx
+- HTTPS: Let's Encrypt
+- Process management: systemd
+- Certificate renewal: Certbot
+
+The public health endpoint returns HTTP 200 with status UP.
+HTTP requests are automatically redirected to HTTPS.
+
+Health check: https://56.228.138.90/actuator/health
 
 ## 16. Automated Testing
 
@@ -950,7 +966,6 @@ Further development areas include:
 - Persistence and historical analysis of calculated routes.
 - Route visualization directly on the interactive warehouse floor graph.
 - More extensive controlled experiments with larger warehouse layouts.
-- Deployment of the complete application to an externally accessible environment.
 
 The database schema already supports route records and ordered stops, but their automatic persistence is not part of the current route calculation API.
 
@@ -977,6 +992,7 @@ Performance conclusions must be based on reproducible scenarios and measured out
 | Area | Documentation |
 |---|---|
 | General project overview | This README |
+| Production deployment | [Deployment Documentation](docs/DEPLOYMENT.md) |
 | Frontend architecture and user flows | [Frontend README](frontend/README.md) |
 | Frontend testing | [TESTING.md](docs/frontend/TESTING.md) |
 | Automated testing and coverage | [Automated Testing](docs/testing/AUTOMATED_TESTING.md) |
@@ -997,7 +1013,7 @@ Performance conclusions must be based on reproducible scenarios and measured out
 
 https://github.com/Vladkosheliuk/warehouse-picker-route-optimization
 
-**Public deployment:** Not available at this stage.
+**Public deployment:** https://56.228.138.90/
 
 ---
 

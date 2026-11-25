@@ -3,8 +3,19 @@
 This tutorial shows how to exercise the local REST API from Windows PowerShell with `curl.exe`. It covers authentication, warehouse creation, map import, user and product lookup, picking-task creation, route comparison, authorization checks, and error handling.
 
 - **Local API:** `http://localhost:8080`
+- **Production API:** `https://56.228.138.90`
 - **Authorization:** HTTP Basic
 **Reference:** [API Reference](API_REFERENCE.md)
+
+## Execution Environment
+
+The application is deployed on AWS EC2 and accessible via HTTPS.
+
+The examples in this tutorial use the local environment because
+they include operations that create, modify and delete data.
+
+Production API availability can be checked at:
+https://56.228.138.90/actuator/health
 
 ## 1. Prerequisites
 

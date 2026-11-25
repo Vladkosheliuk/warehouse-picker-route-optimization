@@ -342,15 +342,10 @@ The workflow performs:
 6. JaCoCo coverage quality gate verification.
 7. Upload of test and coverage artifacts.
 
-The published backend workflow successfully passed for commit:
+The backend workflow successfully passed :
 
-`4a691b4`
-
-Commit description:
-
-`Expand backend tests and enforce JaCoCo coverage thresholds`
-
-Verification date: November 23, 2026.
+All 93 backend tests passed, and both JaCoCo coverage
+thresholds were satisfied.
 
 Verified CI output:
 
@@ -361,7 +356,7 @@ BUILD SUCCESS
 
 GitHub Actions run:
 
-https://github.com/Vladkosheliuk/warehouse-picker-route-optimization/actions/runs/45263297187
+https://github.com/Vladkosheliuk/warehouse-picker-route-optimization/actions/runs/45446623377
 
 ### 9.2 CI Artifacts
 
@@ -412,6 +407,12 @@ to GitHub Actions.
 
 The Playwright E2E workflow completed successfully in GitHub Actions.
 
+Verified CI results (November 24, 2026):
+
+- [Backend Tests — 93 tests passed](https://github.com/Vladkosheliuk/warehouse-picker-route-optimization/actions/runs/45446623377)
+- [Frontend CI — 7 tests passed](https://github.com/Vladkosheliuk/warehouse-picker-route-optimization/actions/runs/45444573211)
+- [Playwright E2E — 2 tests passed](https://github.com/Vladkosheliuk/warehouse-picker-route-optimization/actions/runs/45444573097)
+
 ## 10. Test Isolation and Reproducibility
 
 Automated backend integration tests use a dedicated PostgreSQL container.
@@ -427,6 +428,13 @@ The backend CI workflow provides intentionally unusable default database connect
 This configuration helps prevent accidental dependence on an external database during CI execution.
 
 No production credentials are required for backend automated tests.
+
+The production application is deployed on AWS EC2:
+
+https://56.228.138.90/
+
+Automated tests use isolated test environments and do not
+modify the production database hosted on Supabase.
 
 ## 11. Verified Results and Limitations
 

@@ -14,6 +14,8 @@
 
 **Frontend directory:** `frontend/`
 
+**Public application:** https://56.228.138.90/
+
 ## 2. Criterion Overview
 
 The frontend provides a Single Page Application for warehouse picking operations.
@@ -276,6 +278,12 @@ completed successfully for commit `cd9eb4e`:
 - Frontend CI — passed.
 - Playwright E2E — passed.
 
+Verified CI runs:
+
+- [Backend Tests](https://github.com/Vladkosheliuk/warehouse-picker-route-optimization/actions/runs/45446623377)
+- [Frontend CI](https://github.com/Vladkosheliuk/warehouse-picker-route-optimization/actions/runs/45444573211)
+- [Playwright E2E](https://github.com/Vladkosheliuk/warehouse-picker-route-optimization/actions/runs/45444573097)
+
 The Playwright E2E workflow runs both Chromium scenarios
 using an isolated PostgreSQL test database.
 
@@ -306,7 +314,18 @@ The Front-end criterion submission consists of:
 | GitHub Actions workflow | `.github/workflows/frontend-ci.yml` |
 | Repository | https://github.com/Vladkosheliuk/warehouse-picker-route-optimization |
 
-No public frontend deployment URL is provided at this stage.
+### Production Deployment
+
+The frontend is packaged together with the Spring Boot backend
+in a single executable JAR deployed on AWS EC2.
+
+Public access is provided through Nginx using HTTPS
+with a Let's Encrypt certificate.
+
+- Application: https://56.228.138.90/
+- Health check: https://56.228.138.90/actuator/health
+
+The public health endpoint has been successfully verified.
 
 ## 14. Verification Status
 
@@ -322,8 +341,12 @@ No public frontend deployment URL is provided at this stage.
 | Form validation and error states | Implemented; final integration check required |
 | Component tests | 7/7 passed |
 | E2E tests | 2/2 passed |
-| GitHub Actions | All three workflows passed for commit `cd9eb4e` |
-| Repository publication | Latest local changes must be pushed |
+| GitHub Actions | All three workflows passed |
+| Repository publication | Public GitHub repository |
+| Production deployment | AWS EC2 |
+| HTTPS | Configured and verified |
+| Public health endpoint | HTTP 200 — UP |
+| Authenticated production workflows | Pending manual verification |
 
 ---
 

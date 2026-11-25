@@ -11,7 +11,8 @@ For a reproducible scenario, see the [Integration Tutorial](INTEGRATION_TUTORIAL
 - **Backend:** Java 21, Spring Boot 4.1.2
 - **Database:** PostgreSQL 17, Flyway migrations V1–V5
 - **Authentication:** Spring Security HTTP Basic
-**Local API:** `http://localhost:8080`
+- **Local API:** `http://localhost:8080`
+- **Production API:** `https://56.228.138.90`
 
 ## 1. Prerequisites
 
@@ -186,11 +187,43 @@ Roles are `MANAGER` and `PICKER`.
 
 HTTP Basic is the current authentication mechanism; the API does not issue JWT access tokens.
 
+### Production Environment
+
+The application is deployed on AWS EC2 with Nginx and HTTPS.
+
+Public application: https://56.228.138.90/
+
+Check the availability of the deployed backend:
+
+```powershell
+curl.exe -i https://56.228.138.90/actuator/health
+```
+
+Expected response: HTTP 200 with status UP.
+
+Check authentication requirements:
+
+```powershell
+curl.exe -i -X POST https://56.228.138.90/api/routes/calculate/1
+```
+
+Expected response: HTTP 401 Unauthorized.
+
+Both checks were successfully performed after deployment.
+
 ## 5. Explore the API
+
+### Local Environment
 
 - Swagger UI: http://localhost:8080/swagger-ui/index.html
 - OpenAPI JSON: http://localhost:8080/v3/api-docs
 - OpenAPI YAML: http://localhost:8080/v3/api-docs.yaml
+
+### Production Environment
+
+- Swagger UI: https://56.228.138.90/swagger-ui/index.html
+- OpenAPI JSON: https://56.228.138.90/v3/api-docs
+- OpenAPI YAML: https://56.228.138.90/v3/api-docs.yaml
 
 Swagger UI's **Authorize** control accepts the HTTP Basic username and password.
 

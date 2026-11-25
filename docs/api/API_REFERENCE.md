@@ -3,6 +3,8 @@
 - **API version:** 1.0.0
 - **Specification:** OpenAPI 3.1
 - **Local base URL:** `http://localhost:8080`
+- **Production base URL:** `https://56.228.138.90`
+- **Production Swagger UI:** https://56.228.138.90/swagger-ui/index.html
 - **Authentication:** HTTP Basic
 - **Interactive documentation:** [Swagger UI](http://localhost:8080/swagger-ui/index.html)
 - **Machine-readable contract:** [openapi.yaml](openapi.yaml)
@@ -472,7 +474,13 @@ See [Getting Started](GETTING_STARTED.md), [Integration Tutorial](INTEGRATION_TU
 
 The following table provides examples for all 21 REST API operations.
 
-Base URL: `http://localhost:8080`
+Base URLs:
+
+- Local: `http://localhost:8080`
+- Production: `https://56.228.138.90`
+
+Use the local environment for requests that create, update
+or delete test data.
 
 Authentication: HTTP Basic. All requests require a valid username and password.
 
