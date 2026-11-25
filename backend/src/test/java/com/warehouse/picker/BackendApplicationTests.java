@@ -151,4 +151,59 @@ class BackendApplicationTests {
                 .andExpect(status().isNotFound());
     }
 
+    @Test
+    void shouldExposeDocumentedApiErrorResponses() throws Exception {
+
+        var result = mockMvc.perform(get("/v3/api-docs"))
+                .andExpect(status().isOk());
+
+        String[][] expectedResponses = {
+                {"/api/users", "post", "400", "409"},
+                {"/api/tasks", "post", "400", "404", "409"},
+                {"/api/tasks/{id}/start", "post", "404", "409"},
+                {"/api/tasks/{id}/items/{itemId}/collect", "post", "400", "404", "409"},
+                {"/api/tasks/{id}/complete", "post", "404", "409"},
+                {"/api/tasks/{id}/cancel", "post", "404", "409"},
+                {"/api/tasks/{id}/assign", "post", "400", "404", "409"},
+                {"/api/tasks/{id}", "get", "404"},
+                {"/api/catalog/products", "get", "400", "404"},
+                {"/api/warehouses/{warehouseId}/map/import", "post", "400", "404", "409"},
+                {"/api/warehouses/{warehouseId}/map", "get", "404"}
+        };
+
+        for (String[] operation : expectedResponses) {
+
+            String responsePath = "$.paths['" + operation[0]
+                    + "']." + operation[1] + ".responses";
+
+            for (int i = 2; i < operation.length; i++) {
+
+                result.andExpect(
+                        jsonPath(responsePath + "['" + operation[i] + "']")
+                                .exists()
+                );
+            }
+
+            result.andExpect(
+                    jsonPath(responsePath + "['401'].content")
+                            .doesNotExist()
+            );
+
+            result.andExpect(
+                    jsonPath(responsePath + "['403'].content")
+                            .doesNotExist()
+            );
+        }
+
+        result.andExpect(
+                jsonPath("$.components.schemas.ApiError.properties.fieldErrors.type")
+                        .value("object")
+        );
+
+        result.andExpect(
+                jsonPath("$.components.schemas.ApiError.properties.timestamp.format")
+                        .value("date-time")
+        );
+    }
+
 }
