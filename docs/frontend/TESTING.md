@@ -355,7 +355,7 @@ environments rather than against the production database.
 | Playwright E2E tests | 2/2 passed |
 | Browser | Chromium |
 | TypeScript and Vite build | Successful |
-| GitHub Actions | Previously verified; latest changes not yet published |
+| GitHub Actions | Successfully verified |
 
 
 The implemented tests satisfy the frontend assessment requirement of testing at least three key components and providing one or two end-to-end tests.

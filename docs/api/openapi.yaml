@@ -8,42 +8,43 @@ info:
     identifier: LicenseRef-Proprietary
   version: 1.0.0
 servers:
-- url: /
-  description: Current application server
+  - url: /
+    description: Current application server
 security:
-- basicAuth: []
+  - basicAuth: []
 tags:
-- name: Picking Tasks
-  description: "Create, assign and process picking tasks"
-- name: Warehouse Management
-  description: "Create, retrieve, update and delete warehouses. Requires the MANAGER\
-    \ role."
-- name: Authentication
-  description: Authentication and current user information.
-- name: Warehouse Maps
-  description: Import and retrieve warehouse graph layouts.
-- name: Route Optimization
-  description: Calculation and comparison of warehouse picking routes
-- name: User Management
-  description: Manage application users and picker accounts. Requires the MANAGER
-    role.
+  - name: Picking Tasks
+    description: "Create, assign and process picking tasks"
+  - name: Warehouse Management
+    description: "Create, retrieve, update and delete warehouses. Requires the MANAGER role."
+  - name: Authentication
+    description: Authentication and current user information.
+  - name: Warehouse Maps
+    description: Import and retrieve warehouse graph layouts.
+  - name: Route Optimization
+    description: Calculation and comparison of warehouse picking routes
+  - name: User Management
+    description: Manage application users and picker accounts. Requires the MANAGER
+      role.
+  - name: Product Catalog
+    description: Retrieve available products and stock information by warehouse.
 paths:
   /api/warehouses/{id}:
     get:
       tags:
-      - Warehouse Management
+        - Warehouse Management
       summary: Get warehouse by ID
       description: Returns warehouse details for the given ID.
       operationId: getWarehouseById
       parameters:
-      - name: id
-        in: path
-        description: Warehouse ID
-        required: true
-        schema:
-          type: integer
-          format: int64
-        example: 1
+        - name: id
+          in: path
+          description: Warehouse ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+          example: 1
       responses:
         "200":
           description: Warehouse found
@@ -53,16 +54,8 @@ paths:
                 $ref: "#/components/schemas/WarehouseDTO"
         "401":
           description: Authentication required
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/WarehouseDTO"
         "403":
           description: Manager role required
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/WarehouseDTO"
         "404":
           description: Warehouse not found
           content:
@@ -71,19 +64,19 @@ paths:
                 $ref: "#/components/schemas/ApiError"
     put:
       tags:
-      - Warehouse Management
+        - Warehouse Management
       summary: Update a warehouse
       description: Updates the name and description of an existing warehouse.
       operationId: updateWarehouse
       parameters:
-      - name: id
-        in: path
-        description: Warehouse ID
-        required: true
-        schema:
-          type: integer
-          format: int64
-        example: 1
+        - name: id
+          in: path
+          description: Warehouse ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+          example: 1
       requestBody:
         content:
           application/json:
@@ -105,16 +98,8 @@ paths:
                 $ref: "#/components/schemas/ApiError"
         "401":
           description: Authentication required
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/WarehouseDTO"
         "403":
           description: Manager role required
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/WarehouseDTO"
         "404":
           description: Warehouse not found
           content:
@@ -123,20 +108,20 @@ paths:
                 $ref: "#/components/schemas/ApiError"
     delete:
       tags:
-      - Warehouse Management
+        - Warehouse Management
       summary: Delete a warehouse
       description: Deletes an existing warehouse. Deletion may fail if dependent records
         exist.
       operationId: deleteWarehouse
       parameters:
-      - name: id
-        in: path
-        description: Warehouse ID
-        required: true
-        schema:
-          type: integer
-          format: int64
-        example: 1
+        - name: id
+          in: path
+          description: Warehouse ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+          example: 1
       responses:
         "204":
           description: Warehouse deleted successfully
@@ -153,7 +138,7 @@ paths:
   /api/warehouses:
     get:
       tags:
-      - Warehouse Management
+        - Warehouse Management
       summary: Get all warehouses
       description: Returns all configured warehouses.
       operationId: getAllWarehouses
@@ -168,23 +153,11 @@ paths:
                   $ref: "#/components/schemas/WarehouseDTO"
         "401":
           description: Authentication required
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/WarehouseDTO"
         "403":
           description: Manager role required
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/WarehouseDTO"
     post:
       tags:
-      - Warehouse Management
+        - Warehouse Management
       summary: Create a warehouse
       description: Creates a warehouse with a name and an optional description.
       operationId: createWarehouse
@@ -209,31 +182,23 @@ paths:
                 $ref: "#/components/schemas/ApiError"
         "401":
           description: Authentication required
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/WarehouseDTO"
         "403":
           description: Manager role required
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/WarehouseDTO"
   /api/warehouses/{warehouseId}/map/import:
     post:
       tags:
-      - Warehouse Maps
+        - Warehouse Maps
       summary: Import a warehouse map
       description: Imports a validated map into an empty warehouse. Requires the MANAGER
         role.
       operationId: importMap
       parameters:
-      - name: warehouseId
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
+        - name: warehouseId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
       requestBody:
         content:
           application/json:
@@ -250,37 +215,29 @@ paths:
         "400":
           description: Invalid map
           content:
-            '*/*':
+            application/json:
               schema:
-                $ref: "#/components/schemas/WarehouseMapDTO"
+                $ref: "#/components/schemas/ApiError"
         "401":
           description: Authentication required
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/WarehouseMapDTO"
         "403":
           description: Manager role required
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/WarehouseMapDTO"
         "404":
           description: Warehouse not found
           content:
-            '*/*':
+            application/json:
               schema:
-                $ref: "#/components/schemas/WarehouseMapDTO"
+                $ref: "#/components/schemas/ApiError"
         "409":
           description: Warehouse already contains a map
           content:
-            '*/*':
+            application/json:
               schema:
-                $ref: "#/components/schemas/WarehouseMapDTO"
+                $ref: "#/components/schemas/ApiError"
   /api/users:
     get:
       tags:
-      - User Management
+        - User Management
       summary: List all users
       description: Returns registered application users without exposing password
         hashes. Requires the MANAGER role.
@@ -301,7 +258,7 @@ paths:
             this operation.
     post:
       tags:
-      - User Management
+        - User Management
       summary: Create a user account
       description: "Creates a MANAGER or PICKER account. Validates the username, full\
         \ name, password and role. Requires the MANAGER role."
@@ -324,10 +281,22 @@ paths:
         "403":
           description: The authenticated user does not have permission to perform
             this operation.
+        "400":
+          description: Invalid user data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "409":
+          description: Username already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
   /api/tasks:
     get:
       tags:
-      - Picking Tasks
+        - Picking Tasks
       summary: List all tasks (MANAGER)
       operationId: getAll
       responses:
@@ -346,7 +315,7 @@ paths:
             this operation.
     post:
       tags:
-      - Picking Tasks
+        - Picking Tasks
       summary: Create and assign a task (MANAGER)
       operationId: create
       requestBody:
@@ -367,19 +336,37 @@ paths:
         "403":
           description: The authenticated user does not have permission to perform
             this operation.
+        "400":
+          description: Invalid task data or duplicate product
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: Warehouse, picker or product not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "409":
+          description: Insufficient product stock
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
   /api/tasks/{id}/start:
     post:
       tags:
-      - Picking Tasks
+        - Picking Tasks
       summary: Start my assigned task (PICKER)
       operationId: start
       parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
       responses:
         "200":
           description: OK
@@ -392,25 +379,37 @@ paths:
         "403":
           description: The authenticated user does not have permission to perform
             this operation.
+        "404":
+          description: Picking task not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "409":
+          description: Only assigned tasks can be started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
   /api/tasks/{id}/items/{itemId}/collect:
     post:
       tags:
-      - Picking Tasks
+        - Picking Tasks
       summary: Mark collected product quantity (PICKER)
       operationId: collect
       parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
-      - name: itemId
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
       requestBody:
         content:
           application/json:
@@ -429,19 +428,37 @@ paths:
         "403":
           description: The authenticated user does not have permission to perform
             this operation.
+        "400":
+          description: Invalid quantity or item does not belong to the task
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: Picking task or task item not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "409":
+          description: Invalid task state or collected quantity exceeds required quantity
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
   /api/tasks/{id}/complete:
     post:
       tags:
-      - Picking Tasks
+        - Picking Tasks
       summary: Complete picking task (PICKER)
       operationId: complete
       parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
       responses:
         "200":
           description: OK
@@ -454,19 +471,31 @@ paths:
         "403":
           description: The authenticated user does not have permission to perform
             this operation.
+        "404":
+          description: Picking task not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "409":
+          description: Task is not in progress or not all items have been collected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
   /api/tasks/{id}/cancel:
     post:
       tags:
-      - Picking Tasks
+        - Picking Tasks
       summary: Cancel picking task (MANAGER)
       operationId: cancel
       parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
       responses:
         "200":
           description: OK
@@ -479,19 +508,31 @@ paths:
         "403":
           description: The authenticated user does not have permission to perform
             this operation.
+        "404":
+          description: Picking task not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "409":
+          description: Task cannot be cancelled in its current state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
   /api/tasks/{id}/assign:
     post:
       tags:
-      - Picking Tasks
+        - Picking Tasks
       summary: Assign or reassign a task (MANAGER)
       operationId: assign
       parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
       requestBody:
         content:
           application/json:
@@ -510,10 +551,28 @@ paths:
         "403":
           description: The authenticated user does not have permission to perform
             this operation.
+        "400":
+          description: Invalid picker data or selected user is not an active picker
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: Picking task or picker not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "409":
+          description: Only new or assigned tasks can be assigned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
   /api/routes/calculate/{taskId}:
     post:
       tags:
-      - Route Optimization
+        - Route Optimization
       summary: Calculate and compare picking routes
       description: |
         Calculates two routes for an existing picking task.
@@ -532,12 +591,12 @@ paths:
         them to the database.
       operationId: calculateRoutes
       parameters:
-      - name: taskId
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
       responses:
         "200":
           description: Both routes calculated successfully
@@ -565,7 +624,7 @@ paths:
                 Task not found:
                   description: Task not found
                   value:
-                    timestamp: 2026-11-23T00:00:00+02:00
+                    timestamp: "2026-11-23T00:00:00+02:00"
                     status: 404
                     error: Not Found
                     message: "Picking task not found: 999999999"
@@ -579,18 +638,18 @@ paths:
   /api/warehouses/{warehouseId}/map:
     get:
       tags:
-      - Warehouse Maps
+        - Warehouse Maps
       summary: Get a warehouse map
       description: Returns the stored nodes and edges as JSON. Requires the MANAGER
         role.
       operationId: getMap
       parameters:
-      - name: warehouseId
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
+        - name: warehouseId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
       responses:
         "200":
           description: Warehouse map retrieved
@@ -600,35 +659,27 @@ paths:
                 $ref: "#/components/schemas/WarehouseMapDTO"
         "401":
           description: Authentication required
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/WarehouseMapDTO"
         "403":
           description: Manager role required
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/WarehouseMapDTO"
         "404":
           description: Warehouse not found
           content:
-            '*/*':
+            application/json:
               schema:
-                $ref: "#/components/schemas/WarehouseMapDTO"
+                $ref: "#/components/schemas/ApiError"
   /api/tasks/{id}:
     get:
       tags:
-      - Picking Tasks
+        - Picking Tasks
       summary: Get task details
       operationId: getById
       parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
       responses:
         "200":
           description: OK
@@ -641,10 +692,16 @@ paths:
         "403":
           description: The authenticated user does not have permission to perform
             this operation.
+        "404":
+          description: Picking task not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
   /api/tasks/my:
     get:
       tags:
-      - Picking Tasks
+        - Picking Tasks
       summary: List my assigned tasks (PICKER)
       operationId: getMine
       responses:
@@ -664,16 +721,16 @@ paths:
   /api/catalog/products:
     get:
       tags:
-      - Product Catalog
+        - Product Catalog
       summary: List available products in a warehouse (MANAGER)
       operationId: getProducts
       parameters:
-      - name: warehouseId
-        in: query
-        required: true
-        schema:
-          type: integer
-          format: int64
+        - name: warehouseId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
       responses:
         "200":
           description: OK
@@ -688,10 +745,18 @@ paths:
         "403":
           description: The authenticated user does not have permission to perform
             this operation.
+        "400":
+          description: Missing or invalid warehouseId parameter
+        "404":
+          description: Warehouse not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
   /api/auth/me:
     get:
       tags:
-      - Authentication
+        - Authentication
       summary: Get current authenticated user
       description: Returns the username and application role of the authenticated
         user. Requires HTTP Basic authentication.
@@ -725,13 +790,14 @@ components:
           maxLength: 1000
           minLength: 0
       required:
-      - name
+        - name
     ApiError:
       type: object
       description: Standard API error response
       properties:
         timestamp:
           type: string
+          format: date-time
         status:
           type: integer
           format: int32
@@ -741,6 +807,11 @@ components:
           type: string
         path:
           type: string
+        fieldErrors:
+          type: object
+          description: Field-specific validation errors, when applicable
+          additionalProperties:
+            type: string
     EdgeDTO:
       type: object
       properties:
@@ -756,10 +827,10 @@ components:
         bidirectional:
           type: boolean
       required:
-      - bidirectional
-      - distanceM
-      - from
-      - to
+        - bidirectional
+        - distanceM
+        - from
+        - to
     NodeDTO:
       type: object
       properties:
@@ -770,19 +841,19 @@ components:
         type:
           type: string
           enum:
-          - ENTRANCE
-          - EXIT
-          - INTERSECTION
-          - STORAGE
+            - ENTRANCE
+            - EXIT
+            - INTERSECTION
+            - STORAGE
         x:
           type: number
         "y":
           type: number
       required:
-      - code
-      - type
-      - x
-      - "y"
+        - code
+        - type
+        - x
+        - "y"
     WarehouseMapDTO:
       type: object
       properties:
@@ -799,8 +870,8 @@ components:
           maxItems: 5000
           minItems: 1
       required:
-      - edges
-      - nodes
+        - edges
+        - nodes
     CreateUserRequest:
       type: object
       properties:
@@ -819,13 +890,13 @@ components:
         role:
           type: string
           enum:
-          - MANAGER
-          - PICKER
+            - MANAGER
+            - PICKER
       required:
-      - fullName
-      - password
-      - role
-      - username
+        - fullName
+        - password
+        - role
+        - username
     UserResponse:
       type: object
       properties:
@@ -857,9 +928,9 @@ components:
             $ref: "#/components/schemas/ItemRequest"
           minItems: 1
       required:
-      - items
-      - pickerId
-      - warehouseId
+        - items
+        - pickerId
+        - warehouseId
     ItemRequest:
       type: object
       properties:
@@ -872,8 +943,8 @@ components:
           format: int32
           exclusiveMinimum: 0
       required:
-      - productId
-      - quantity
+        - productId
+        - quantity
     ItemResponse:
       type: object
       properties:
@@ -932,7 +1003,7 @@ components:
           format: int32
           exclusiveMinimum: 0
       required:
-      - quantity
+        - quantity
     AssignRequest:
       type: object
       properties:
@@ -941,7 +1012,7 @@ components:
           format: int64
           exclusiveMinimum: 0
       required:
-      - pickerId
+        - pickerId
     RouteComparison:
       type: object
       properties:

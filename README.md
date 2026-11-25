@@ -472,7 +472,7 @@ The specification should be regenerated and revalidated
 whenever controllers, DTOs, or API annotations change.
 
 ## 14. Project Structure
-│       └──
+
 ```text
 warehouse-picker-route-optimization/
 ├── .github/
